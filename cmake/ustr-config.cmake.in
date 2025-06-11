@@ -1,0 +1,29 @@
+@PACKAGE_INIT@
+
+# USTR Package Configuration File
+# This file is used by find_package() to locate the USTR library
+
+include("${CMAKE_CURRENT_LIST_DIR}/ustr-targets.cmake")
+
+# Provide information about the package
+set(USTR_VERSION "@PROJECT_VERSION@")
+set(USTR_FOUND TRUE)
+
+# Check that all required components are available
+check_required_components(ustr)
+
+# Set legacy variables for compatibility
+set(USTR_INCLUDE_DIRS "${PACKAGE_PREFIX_DIR}/include")
+set(USTR_LIBRARIES ustr::ustr)
+
+# Print information when package is found
+if(NOT ustr_FIND_QUIETLY)
+    message(STATUS "Found USTR: ${PACKAGE_PREFIX_DIR} (found version \"${USTR_VERSION}\")")
+endif()
+
+# Provide usage information
+if(NOT ustr_FIND_QUIETLY)
+    message(STATUS "USTR usage:")
+    message(STATUS "  Include: #include <ustr/ustr.h>")
+    message(STATUS "  Link: target_link_libraries(your_target PRIVATE ustr::ustr)")
+endif()
