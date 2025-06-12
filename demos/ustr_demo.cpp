@@ -211,6 +211,37 @@ void demonstrateRealWorldUsage() {
     std::cout << formatError("network_connect", -1, 1703701235.123) << "\n";
 }
 
+void demonstrateIteratorConversion() {
+    std::cout << "\n=== Iterator-Based Conversion Demo ===\n";
+    
+    // Vector of integers
+    std::vector<int> numbers = {1, 2, 3, 4, 5};
+    std::cout << "Vector of ints: " << ustr::to_string(numbers.cbegin(), numbers.cend()) << "\n";
+    
+    // Vector of strings
+    std::vector<std::string> words = {"hello", "world", "iterator", "conversion"};
+    std::cout << "Vector of strings: " << ustr::to_string(words.cbegin(), words.cend()) << "\n";
+    
+    // Empty container
+    std::vector<double> empty;
+    std::cout << "Empty vector: " << ustr::to_string(empty.cbegin(), empty.cend()) << "\n";
+    
+    // Pair-like types (std::pair)
+    std::vector<std::pair<std::string, int>> pairs = {{"one", 1}, {"two", 2}, {"three", 3}};
+    std::cout << "Vector of pairs: " << ustr::to_string(pairs.cbegin(), pairs.cend()) << "\n";
+    
+    // Map container (key-value pairs)
+    std::map<std::string, std::string> colors = {
+        {"red", "#FF0000"}, 
+        {"green", "#00FF00"}, 
+        {"blue", "#0000FF"}
+    };
+    std::cout << "Map container: " << ustr::to_string(colors.cbegin(), colors.cend()) << "\n";
+    
+    // Using with a custom container or subset of elements
+    std::cout << "Subset of vector: " << ustr::to_string(numbers.cbegin() + 1, numbers.cend() - 1) << "\n";
+}
+
 void demonstrateScopedFormatting() {
     std::cout << "\n=== Scoped Formatting Demo ===\n";
     
@@ -276,6 +307,7 @@ int main() {
         demonstrateTypeTraits();
         demonstrateEdgeCases();
         demonstrateRealWorldUsage();
+        demonstrateIteratorConversion();
         
         demonstrateScopedFormatting();
         

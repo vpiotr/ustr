@@ -182,6 +182,18 @@ namespace details {
  * @{
  */
 
+// Helper to detect if a type has first and second members (like std::pair)
+template<typename T, typename = void>
+struct has_first_second : std::false_type {};
+
+template<typename T>
+struct has_first_second<T, 
+    typename std::enable_if<
+        !std::is_void<decltype(std::declval<T>().first)>::value && 
+        !std::is_void<decltype(std::declval<T>().second)>::value
+    >::type
+> : std::true_type {};
+
 // Helper to detect if a type is one of the special types that need explicit handling
 template<typename T>
 struct is_special_type : std::integral_constant<bool,
@@ -336,6 +348,87 @@ inline auto to_string_impl(const T& value)
 template<typename T>
 inline std::string to_string(const T& value) {
     return details::to_string_impl(value);
+}
+
+// Forward declarations for helper functions
+template<typename T>
+inline void add_iterator_value(std::ostringstream& ss, const T& value, std::false_type);
+
+template<typename T>
+inline void add_iterator_value(std::ostringstream& ss, const T& value, std::true_type);
+
+/**
+ * @brief Convert a range defined by iterators to a string representation
+ * 
+ * This function converts a range of elements defined by iterators into
+ * a comma-separated list surrounded by square brackets, e.g., [1, 2, 3].
+ * For iterators pointing to key-value pairs (like those from std::map),
+ * it uses a JSON-like format, e.g., {"key1": "value1", "key2": "value2"}.
+ * 
+ * @tparam IterT Type of the iterator
+ * @param begin Begin iterator of the container
+ * @param end End iterator of the container
+ * @return String representation of the container contents
+ * 
+ * @code{.cpp}
+ * // Vector example
+ * std::vector<int> vec = {1, 2, 3};
+ * auto s1 = ustr::to_string(vec.cbegin(), vec.cend());  // "[1, 2, 3]"
+ * 
+ * // Map example
+ * std::map<std::string, int> map = {{"a", 1}, {"b", 2}};
+ * auto s2 = ustr::to_string(map.cbegin(), map.cend());  // "{"a": 1, "b": 2}"
+ * @endcode
+ */
+template<typename IterT>
+inline std::string to_string(IterT begin, IterT end) {
+    // Check if we're dealing with a key-value pair container (like std::map)
+    using value_type = typename std::iterator_traits<IterT>::value_type;
+    
+    // Check for pair-like types (having first and second members)
+    using pair_check = typename details::has_first_second<value_type>;
+    const bool is_pair = pair_check::value;
+    
+    std::ostringstream ss;
+    if (is_pair) {
+        // Use JSON-like format for key-value pairs
+        ss << '{';
+    } else {
+        // Use array format for regular containers
+        ss << '[';
+    }
+    
+    bool first = true;
+    for (IterT it = begin; it != end; ++it) {
+        if (!first) {
+            ss << ", ";
+        } else {
+            first = false;
+        }
+        
+        // Use template specialization to handle the different types
+        add_iterator_value(ss, *it, typename details::has_first_second<value_type>::type());
+    }
+    
+    if (is_pair) {
+        ss << '}';
+    } else {
+        ss << ']';
+    }
+    
+    return ss.str();
+}
+
+// Helper function to add iterator value when it's not a pair
+template<typename T>
+inline void add_iterator_value(std::ostringstream& ss, const T& value, std::false_type) {
+    ss << to_string(value);
+}
+
+// Helper function to add iterator value when it's a pair
+template<typename T>
+inline void add_iterator_value(std::ostringstream& ss, const T& value, std::true_type) {
+    ss << "\"" << to_string(value.first) << "\": " << to_string(value.second);
 }
 
 /** @} */ // end of api group
