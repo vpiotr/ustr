@@ -81,6 +81,17 @@
 #include <map>
 #include <iomanip>
 
+// Cross-platform function name macro compatibility
+#ifndef __PRETTY_FUNCTION__
+    #ifdef _MSC_VER
+        #define __PRETTY_FUNCTION__ __FUNCSIG__
+    #elif defined(__GNUC__)
+        #define __PRETTY_FUNCTION__ __PRETTY_FUNCTION__
+    #else
+        #define __PRETTY_FUNCTION__ __FUNCTION__
+    #endif
+#endif   
+
 namespace utest {
 
 /**
