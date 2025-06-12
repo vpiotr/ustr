@@ -1,5 +1,6 @@
 # USTR - Universal String Conversion Library
 
+[![CI](https://github.com/vpiotr/ustr/actions/workflows/ci.yml/badge.svg)](https://github.com/vpiotr/ustr/actions/workflows/ci.yml)
 [![C++](https://img.shields.io/badge/C%2B%2B-11%2F14%2F17%2F20-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Header Only](https://img.shields.io/badge/header--only-yes-brightgreen.svg)]()
