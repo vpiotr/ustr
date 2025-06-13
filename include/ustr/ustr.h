@@ -627,7 +627,17 @@ inline void add_iterator_value(std::ostringstream& ss, const T& value, std::fals
 // Helper function to add iterator value when it's a pair
 template<typename T>
 inline void add_iterator_value(std::ostringstream& ss, const T& value, std::true_type) {
-    ss << "\"" << to_string(value.first) << "\": " << to_string(value.second);
+    // Check if the key is a string type (should be quoted) or numeric type (should not be quoted)
+    using key_type = typename std::decay<decltype(value.first)>::type;
+    constexpr bool should_quote_key = std::is_same<key_type, std::string>::value ||
+                                      std::is_same<key_type, const char*>::value ||
+                                      std::is_same<key_type, char*>::value;
+    
+    if (should_quote_key) {
+        ss << "\"" << to_string(value.first) << "\": " << to_string(value.second);
+    } else {
+        ss << to_string(value.first) << ": " << to_string(value.second);
+    }
 }
 
 /** @} */ // end of api group

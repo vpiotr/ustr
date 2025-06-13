@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <array>
 
 // Test iterator-based to_string function
 UTEST_FUNC_DEF2(IteratorConversion, VectorOfInts) {
@@ -23,10 +24,39 @@ UTEST_FUNC_DEF2(IteratorConversion, VectorOfStrings) {
     UTEST_ASSERT_STR_EQUALS(result, "[hello, world]");
 }
 
-UTEST_FUNC_DEF2(IteratorConversion, MapContainer) {
+UTEST_FUNC_DEF2(IteratorConversion, MapContainerStringKeys) {
     std::map<std::string, std::string> values = {{"key1", "value1"}, {"key2", "value2"}};
     std::string result = ustr::to_string(values.cbegin(), values.cend());
     UTEST_ASSERT_STR_EQUALS(result, "{\"key1\": value1, \"key2\": value2}");
+}
+
+UTEST_FUNC_DEF2(IteratorConversion, MapContainerNumericKeys) {
+    std::map<int, std::string> values = {{1, "one"}, {2, "two"}, {42, "answer"}};
+    std::string result = ustr::to_string(values.cbegin(), values.cend());
+    UTEST_ASSERT_STR_EQUALS(result, "{1: one, 2: two, 42: answer}");
+}
+
+UTEST_FUNC_DEF2(IteratorConversion, MapContainerDoubleKeys) {
+    std::map<double, int> values = {{1.5, 15}, {2.7, 27}};
+    std::string result = ustr::to_string(values.cbegin(), values.cend());
+    // std::to_string for double typically gives decimal places
+    UTEST_ASSERT_TRUE(result.find("{1.5") == 0);
+    UTEST_ASSERT_TRUE(result.find(": 15") != std::string::npos);
+    UTEST_ASSERT_TRUE(result.find("2.7") != std::string::npos);
+    UTEST_ASSERT_TRUE(result.find(": 27}") != std::string::npos);
+}
+
+// Test std::array container
+UTEST_FUNC_DEF2(IteratorConversion, ArrayContainer) {
+    std::array<int, 5> values = {{10, 20, 30, 40, 50}};
+    std::string result = ustr::to_string(values.cbegin(), values.cend());
+    UTEST_ASSERT_STR_EQUALS(result, "[10, 20, 30, 40, 50]");
+}
+
+UTEST_FUNC_DEF2(IteratorConversion, ArrayContainerStrings) {
+    std::array<std::string, 3> values = {{"apple", "banana", "cherry"}};
+    std::string result = ustr::to_string(values.cbegin(), values.cend());
+    UTEST_ASSERT_STR_EQUALS(result, "[apple, banana, cherry]");
 }
 
 // Test the new cbegin/cend specialization
@@ -44,11 +74,18 @@ UTEST_FUNC_DEF2(CBeginCEndSpecialization, StringSpecialization) {
     UTEST_ASSERT_STR_EQUALS(result, "test");
 }
 
-UTEST_FUNC_DEF2(CBeginCEndSpecialization, MapSpecialization) {
+UTEST_FUNC_DEF2(CBeginCEndSpecialization, MapSpecializationStringKeys) {
     std::map<std::string, int> values = {{"a", 1}, {"b", 2}};
     std::string result = ustr::to_string(values);
     // Should use the cbegin/cend specialization, which uses iterator-based conversion
     UTEST_ASSERT_STR_EQUALS(result, "{\"a\": 1, \"b\": 2}");
+}
+
+UTEST_FUNC_DEF2(CBeginCEndSpecialization, MapSpecializationNumericKeys) {
+    std::map<int, std::string> values = {{10, "ten"}, {20, "twenty"}};
+    std::string result = ustr::to_string(values);
+    // Should use the cbegin/cend specialization, numeric keys should not be quoted
+    UTEST_ASSERT_STR_EQUALS(result, "{10: ten, 20: twenty}");
 }
 
 UTEST_FUNC_DEF2(CBeginCEndSpecialization, EmptyVectorSpecialization) {
@@ -58,7 +95,12 @@ UTEST_FUNC_DEF2(CBeginCEndSpecialization, EmptyVectorSpecialization) {
     UTEST_ASSERT_STR_EQUALS(result, "[]");
 }
 
-
+UTEST_FUNC_DEF2(CBeginCEndSpecialization, ArraySpecialization) {
+    std::array<int, 4> values = {{100, 200, 300, 400}};
+    std::string result = ustr::to_string(values);
+    // Should use the cbegin/cend specialization for std::array
+    UTEST_ASSERT_STR_EQUALS(result, "[100, 200, 300, 400]");
+}
 
 int main() {
     UTEST_PROLOG();
@@ -68,13 +110,19 @@ int main() {
     UTEST_FUNC2(IteratorConversion, VectorOfInts);
     UTEST_FUNC2(IteratorConversion, EmptyContainer);
     UTEST_FUNC2(IteratorConversion, VectorOfStrings);
-    UTEST_FUNC2(IteratorConversion, MapContainer);
+    UTEST_FUNC2(IteratorConversion, MapContainerStringKeys);
+    UTEST_FUNC2(IteratorConversion, MapContainerNumericKeys);
+    UTEST_FUNC2(IteratorConversion, MapContainerDoubleKeys);
+    UTEST_FUNC2(IteratorConversion, ArrayContainer);
+    UTEST_FUNC2(IteratorConversion, ArrayContainerStrings);
     
     // cbegin/cend specialization tests
     UTEST_FUNC2(CBeginCEndSpecialization, VectorSpecialization);
     UTEST_FUNC2(CBeginCEndSpecialization, StringSpecialization);
-    UTEST_FUNC2(CBeginCEndSpecialization, MapSpecialization);
+    UTEST_FUNC2(CBeginCEndSpecialization, MapSpecializationStringKeys);
+    UTEST_FUNC2(CBeginCEndSpecialization, MapSpecializationNumericKeys);
     UTEST_FUNC2(CBeginCEndSpecialization, EmptyVectorSpecialization);
+    UTEST_FUNC2(CBeginCEndSpecialization, ArraySpecialization);
     
     UTEST_EPILOG();
 }
