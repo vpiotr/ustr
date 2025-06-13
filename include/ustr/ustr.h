@@ -471,14 +471,14 @@ public:
 };
 
 /**
- * @brief Scoped formatter context for local customization
+ * @brief Format context for local customization
  * 
  * This class allows you to specify custom formatting rules for specific
  * types within a limited scope. When the context goes out of scope,
  * the default formatting is restored.
  * 
  * @code{.cpp}
- * scoped_formatter ctx;
+ * format_context ctx;
  * 
  * // Custom bool formatter
  * ctx.set_formatter<bool>([](bool b) { return b ? "YES" : "NO"; });
@@ -495,7 +495,7 @@ public:
  * std::string result2 = ctx.to_string(3.14159f); // "3.14"
  * @endcode
  */
-class scoped_formatter {
+class format_context {
 private:
     std::map<std::type_index, std::shared_ptr<void>> formatters_;
 

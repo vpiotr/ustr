@@ -243,10 +243,10 @@ void demonstrateIteratorConversion() {
 }
 
 void demonstrateScopedFormatting() {
-    std::cout << "\n=== Scoped Formatting Demo ===\n";
+    std::cout << "\n=== Format Context Demo ===\n";
     
-    // Create a scoped formatter context
-    ustr::scoped_formatter ctx;
+    // Create a format context
+    ustr::format_context ctx;
     
     // Set custom formatters for different types
     ctx.set_formatter<bool>([](bool b) { 
