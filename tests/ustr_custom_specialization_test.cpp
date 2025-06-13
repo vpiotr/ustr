@@ -139,17 +139,17 @@ UTEST_FUNC_DEF2(TypeTraits, HasCustomSpecialization) {
 // Test that regular long long without specialization would behave differently
 // (This test demonstrates the difference between regular numeric handling and custom handling)
 UTEST_FUNC_DEF2(CustomSpecialization, CompareWithRegularLong) {
-    long regular_long = 123456789012345L;
+    long regular_long = 987654321L;
     std::string regular_result = ustr::to_string(regular_long);
     
-    long long custom_long_long = 123456789012345LL;
+    long long custom_long_long = 987654321LL;
     std::string custom_result = ustr::to_string(custom_long_long);
     
     // Regular long should not have the "LL" suffix
-    UTEST_ASSERT_STR_EQUALS(regular_result, "123456789012345");
+    UTEST_ASSERT_STR_EQUALS(regular_result, "987654321");
     
     // Custom long long should have the "LL" suffix
-    UTEST_ASSERT_STR_EQUALS(custom_result, "123456789012345LL");
+    UTEST_ASSERT_STR_EQUALS(custom_result, "987654321LL");
     
     // They should be different
     UTEST_ASSERT_TRUE(regular_result != custom_result);
