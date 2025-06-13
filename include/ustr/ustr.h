@@ -219,6 +219,10 @@ namespace details {
  * @{
  */
 
+// Forward declaration for recursive calls
+template<typename T>
+std::string to_string_forward(const T& value);
+
 // Constants for common string representations
 inline const char* get_null_string() {
     return "null";
@@ -235,6 +239,13 @@ struct has_first_second<T,
         !std::is_void<decltype(std::declval<T>().second)>::value
     >::type
 > : std::true_type {};
+
+// Helper to detect if a type is std::pair
+template<typename T>
+struct is_pair : std::false_type {};
+
+template<typename T, typename U>
+struct is_pair<std::pair<T, U>> : std::true_type {};
 
 // Helper to detect if a type is one of the special types that need explicit handling
 template<typename T>
@@ -307,6 +318,21 @@ inline auto to_string_impl(const T& value)
     return std::to_string(value);
 }
 
+// Implementation for std::pair types
+template<typename T>
+inline auto to_string_impl(const T& value)
+    -> typename std::enable_if<
+        !has_to_string<T>::value && 
+        !is_numeric<T>::value && 
+        !is_special_type<T>::value &&
+        is_pair<T>::value,
+        std::string
+    >::type {
+    std::ostringstream ss;
+    ss << "(" << to_string_forward(value.first) << ", " << to_string_forward(value.second) << ")";
+    return ss.str();
+}
+
 // Implementation for types with cbegin/cend (containers) - uses iterator-based conversion
 template<typename T>
 inline auto to_string_impl(const T& value)
@@ -314,19 +340,21 @@ inline auto to_string_impl(const T& value)
         !has_to_string<T>::value && 
         !is_numeric<T>::value && 
         !is_special_type<T>::value &&
+        !is_pair<T>::value &&
         has_cbegin_cend<T>::value,
         std::string
     >::type {
     return to_string(value.cbegin(), value.cend());
 }
 
-// Implementation for streamable types (excluding numeric, special types, and containers with cbegin/cend)
+// Implementation for streamable types (excluding numeric, special types, pairs, and containers with cbegin/cend)
 template<typename T>
 inline auto to_string_impl(const T& value)
     -> typename std::enable_if<
         !has_to_string<T>::value && 
         !is_numeric<T>::value && 
         !is_special_type<T>::value &&
+        !is_pair<T>::value &&
         !has_cbegin_cend<T>::value &&
         is_streamable<T>::value, 
         std::string
@@ -343,6 +371,7 @@ inline auto to_string_impl(const T& value)
         !has_to_string<T>::value && 
         !is_numeric<T>::value && 
         !is_special_type<T>::value &&
+        !is_pair<T>::value &&
         !has_cbegin_cend<T>::value &&
         !is_streamable<T>::value, 
         std::string
@@ -370,9 +399,10 @@ inline auto to_string_impl(const T& value)
  * 
  * 1. If the type has a to_string() method, use it
  * 2. If the type is numeric, use std::to_string()
- * 3. If the type has cbegin/cend methods (containers), use iterator-based conversion
- * 4. If the type is streamable, use operator<<
- * 5. Otherwise, return type information with memory address
+ * 3. If the type is std::pair, format as (first, second)
+ * 4. If the type has cbegin/cend methods (containers), use iterator-based conversion
+ * 5. If the type is streamable, use operator<<
+ * 6. Otherwise, return type information with memory address
  * 
  * Special handling for common types:
  * - std::string: returned as-is
@@ -412,6 +442,14 @@ inline auto to_string_impl(const T& value)
 template<typename T>
 inline std::string to_string(const T& value) {
     return details::to_string_impl(value);
+}
+
+// Implementation of forward declaration for recursive calls within details namespace
+namespace details {
+    template<typename T>
+    inline std::string to_string_forward(const T& value) {
+        return to_string(value);
+    }
 }
 
 // Forward declarations for helper functions
