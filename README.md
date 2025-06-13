@@ -317,7 +317,8 @@ chmod +x build.sh run_tests.sh run_demos.sh
 ./build.sh
 
 # Or build manually
-g++ -std=c++11 -Wall -Iinclude -o build/ustr_test tests/ustr_test.cpp
+g++ -std=c++11 -Wall -Iinclude -o build/ustr_core_features_test tests/ustr_core_features_test.cpp
+g++ -std=c++11 -Wall -Iinclude -o build/ustr_container_test tests/ustr_container_test.cpp
 g++ -std=c++11 -Wall -Iinclude -o build/ustr_demo demos/ustr_demo.cpp
 ```
 
@@ -333,8 +334,10 @@ cd build && ctest
 ./run_tests.sh
 
 # Or run directly
-./build/bin/ustr_test    # CMake build
-./build/ustr_test        # Shell script build
+./build/bin/ustr_core_features_test  # Core features tests (CMake build)
+./build/bin/ustr_container_test      # Container tests (CMake build)
+./build/ustr_core_features_test      # Shell script build
+./build/ustr_container_test          # Shell script build
 ```
 
 ### Running Demos
@@ -391,7 +394,8 @@ ustr/
 │       └── utest.h             # Testing framework (included)
 ├── tests/
 │   ├── CMakeLists.txt          # CMake configuration for tests
-│   └── ustr_test.cpp           # Comprehensive test suite
+│   ├── ustr_core_features_test.cpp  # Core features test suite
+│   └── ustr_container_test.cpp      # Container-specific test suite
 ├── demos/
 │   ├── CMakeLists.txt          # CMake configuration for demos
 │   └── ustr_demo.cpp           # Usage examples and demonstrations
@@ -432,7 +436,9 @@ Basic performance characteristics (relative to manual conversion):
 Contributions are welcome! Please follow these guidelines:
 
 1. **Code Style**: Follow existing style (spaces, naming conventions)
-2. **Testing**: Add tests for new features in `tests/ustr_test.cpp`
+2. **Testing**: Add tests for new features in appropriate test file:
+   - Core functionality: `tests/ustr_core_features_test.cpp`
+   - Container functionality: `tests/ustr_container_test.cpp`
 3. **Documentation**: Update README and inline documentation
 4. **Compatibility**: Maintain C++11 compatibility
 
@@ -445,7 +451,9 @@ Contributions are welcome! Please follow these guidelines:
 ### Adding New Features
 
 1. Add implementation to `include/ustr/ustr.h`
-2. Add tests to `tests/ustr_test.cpp`
+2. Add tests to appropriate test file:
+   - Core functionality: `tests/ustr_core_features_test.cpp`
+   - Container functionality: `tests/ustr_container_test.cpp`
 3. Add examples to `demos/ustr_demo.cpp` if applicable
 4. Update README.md
 

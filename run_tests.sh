@@ -32,10 +32,14 @@ if [ ! -d "$BUILD_DIR" ]; then
     fi
 fi
 
-# Check if test binary exists
-TEST_BIN="$BUILD_DIR/bin/ustr_test"
-if [ ! -x "$TEST_BIN" ]; then
-    echo -e "${RED}Test binary not found or not executable: $TEST_BIN${NC}"
+# Check if test binaries exist
+CORE_TEST_BIN="$BUILD_DIR/bin/ustr_core_features_test"
+CONTAINER_TEST_BIN="$BUILD_DIR/bin/ustr_container_test"
+
+if [ ! -x "$CORE_TEST_BIN" ] || [ ! -x "$CONTAINER_TEST_BIN" ]; then
+    echo -e "${RED}Test binaries not found or not executable:${NC}"
+    [ ! -x "$CORE_TEST_BIN" ] && echo -e "${RED}- $CORE_TEST_BIN${NC}"
+    [ ! -x "$CONTAINER_TEST_BIN" ] && echo -e "${RED}- $CONTAINER_TEST_BIN${NC}"
     echo -e "${YELLOW}Try running the build script first: ./build.sh${NC}"
     exit 1
 fi
@@ -45,9 +49,22 @@ echo -e "${GREEN}Running USTR tests...${NC}"
 echo "====================="
 echo ""
 
-# Execute the test binary
-"$TEST_BIN"
-exit_code=$?
+# Execute the test binaries
+echo -e "${BLUE}Running Core Features Tests:${NC}"
+"$CORE_TEST_BIN"
+core_exit_code=$?
+
+echo ""
+echo -e "${BLUE}Running Container Tests:${NC}"
+"$CONTAINER_TEST_BIN"
+container_exit_code=$?
+
+# Check exit codes
+if [ $core_exit_code -eq 0 ] && [ $container_exit_code -eq 0 ]; then
+    exit_code=0
+else
+    exit_code=1
+fi
 
 echo ""
 if [ $exit_code -eq 0 ]; then

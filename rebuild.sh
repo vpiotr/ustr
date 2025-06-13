@@ -163,12 +163,13 @@ fi
 
 echo ""
 echo -e "${BLUE}Available targets:${NC}"
-echo "  make               - Build all"
-echo "  make ustr_test     - Build tests only"
-echo "  make run_tests     - Build and run tests"
+echo "  make                       - Build all"
+echo "  make ustr_core_features_test - Build core features tests only"
+echo "  make ustr_container_test   - Build container tests only"
+echo "  make run_tests             - Build and run all tests"
 if [ "$BUILD_DEMOS" = "ON" ]; then
-    echo "  make ustr_demo     - Build demo only"
-    echo "  make run_demos     - Build and run demos"
+    echo "  make ustr_demo         - Build demo only"
+    echo "  make run_demos         - Build and run demos"
 fi
 echo "  make install       - Install the library"
 
@@ -177,7 +178,8 @@ echo -e "${BLUE}Quick commands:${NC}"
 if [ "$BUILD_TESTS" = "ON" ]; then
     echo -e "  Run tests:  ${GREEN}cd build && make run_tests${NC}"
     echo -e "  Run tests:  ${GREEN}cd build && ctest${NC}"
-    echo -e "  Run tests directly: ${GREEN}./build/bin/ustr_test${NC}"
+    echo -e "  Run core tests directly: ${GREEN}./build/bin/ustr_core_features_test${NC}"
+    echo -e "  Run container tests directly: ${GREEN}./build/bin/ustr_container_test${NC}"
 fi
 
 if [ "$BUILD_DEMOS" = "ON" ]; then
