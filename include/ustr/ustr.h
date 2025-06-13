@@ -172,6 +172,39 @@ struct is_numeric : std::integral_constant<bool,
     !std::is_same<T, char16_t>::value &&
     !std::is_same<T, char32_t>::value> {};
 
+/**
+ * @brief Detects if a type has cbegin() and cend() methods
+ * 
+ * This trait checks if a type T has public cbegin() and cend() methods
+ * that return const iterators. This is useful for detecting standard
+ * containers and other types that support const iteration.
+ * 
+ * @tparam T Type to check
+ * 
+ * @code{.cpp}
+ * static_assert(ustr::has_cbegin_cend<std::vector<int>>::value, "vector has cbegin/cend");
+ * static_assert(ustr::has_cbegin_cend<std::string>::value, "string has cbegin/cend");
+ * static_assert(ustr::has_cbegin_cend<std::map<int, int>>::value, "map has cbegin/cend");
+ * static_assert(!ustr::has_cbegin_cend<int>::value, "int does not have cbegin/cend");
+ * @endcode
+ */
+template<typename T>
+struct has_cbegin_cend {
+private:
+    template<typename U>
+    static auto test(int) -> decltype(
+        std::declval<U>().cbegin(),
+        std::declval<U>().cend(),
+        std::true_type{}
+    );
+    
+    template<typename>
+    static std::false_type test(...);
+    
+public:
+    static const bool value = decltype(test<T>(0))::value;
+};
+
 /** @} */ // end of type_traits group
 
 namespace details {

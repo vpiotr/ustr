@@ -54,6 +54,23 @@ public:
     }
 };
 
+// Custom container class with cbegin/cend methods for testing
+class CustomContainer {
+private:
+    std::vector<int> data_;
+public:
+    CustomContainer(std::initializer_list<int> init) : data_(init) {}
+    
+    std::vector<int>::const_iterator cbegin() const { return data_.cbegin(); }
+    std::vector<int>::const_iterator cend() const { return data_.cend(); }
+    
+    // Also provide regular begin/end for completeness
+    std::vector<int>::iterator begin() { return data_.begin(); }
+    std::vector<int>::iterator end() { return data_.end(); }
+    std::vector<int>::const_iterator begin() const { return data_.begin(); }
+    std::vector<int>::const_iterator end() const { return data_.end(); }
+};
+
 // Test std::string input
 UTEST_FUNC_DEF2(StringConversion, StdString) {
     std::string input = "hello world";
@@ -214,6 +231,34 @@ UTEST_FUNC_DEF2(TypeTraits, IsNumeric) {
     UTEST_ASSERT_FALSE(ustr::is_numeric<std::string>::value);
 }
 
+UTEST_FUNC_DEF2(TypeTraits, HasCBeginCEnd) {
+    // Use type aliases to avoid macro parsing issues with nested templates
+    typedef std::vector<int> VectorInt;
+    typedef std::map<int, int> MapIntInt;
+    typedef std::vector<std::string> VectorString;
+    
+    // Standard containers should have cbegin/cend
+    UTEST_ASSERT_TRUE(ustr::has_cbegin_cend<VectorInt>::value);
+    UTEST_ASSERT_TRUE(ustr::has_cbegin_cend<std::string>::value);
+    UTEST_ASSERT_TRUE(ustr::has_cbegin_cend<MapIntInt>::value);
+    UTEST_ASSERT_TRUE(ustr::has_cbegin_cend<VectorString>::value);
+    
+    // Custom container with cbegin/cend should have it
+    UTEST_ASSERT_TRUE(ustr::has_cbegin_cend<CustomContainer>::value);
+    
+    // Primitive types should not have cbegin/cend
+    UTEST_ASSERT_FALSE(ustr::has_cbegin_cend<int>::value);
+    UTEST_ASSERT_FALSE(ustr::has_cbegin_cend<float>::value);
+    UTEST_ASSERT_FALSE(ustr::has_cbegin_cend<bool>::value);
+    UTEST_ASSERT_FALSE(ustr::has_cbegin_cend<char>::value);
+    
+    // Custom classes without cbegin/cend should not have it
+    UTEST_ASSERT_FALSE(ustr::has_cbegin_cend<CustomToString>::value);
+    UTEST_ASSERT_FALSE(ustr::has_cbegin_cend<StreamableClass>::value);
+    UTEST_ASSERT_FALSE(ustr::has_cbegin_cend<NonStreamableClass>::value);
+    UTEST_ASSERT_FALSE(ustr::has_cbegin_cend<BothMethods>::value);
+}
+
 // Test edge cases
 UTEST_FUNC_DEF2(EdgeCases, EmptyString) {
     std::string empty = "";
@@ -281,6 +326,7 @@ int main() {
     UTEST_FUNC2(TypeTraits, HasToString);
     UTEST_FUNC2(TypeTraits, IsStreamable);
     UTEST_FUNC2(TypeTraits, IsNumeric);
+    UTEST_FUNC2(TypeTraits, HasCBeginCEnd);
     
     // Edge case tests
     UTEST_FUNC2(EdgeCases, EmptyString);
