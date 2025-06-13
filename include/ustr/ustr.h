@@ -40,9 +40,9 @@
  *     MyClass obj;
  *     std::string s6 = ustr::to_string(obj);          // Uses obj.to_string()
  *     
- *     // Streamable class
+ *     // Container with cbegin/cend
  *     std::vector<int> vec{1, 2, 3};
- *     std::string s7 = ustr::to_string(vec);          // Uses operator<<
+ *     std::string s7 = ustr::to_string(vec);          // "[1, 2, 3]"
  *     
  *     return 0;
  * }
@@ -207,6 +207,10 @@ public:
 
 /** @} */ // end of type_traits group
 
+// Forward declarations for iterator-based to_string
+template<typename IterT>
+std::string to_string(IterT begin, IterT end);
+
 namespace details {
 
 /**
@@ -303,13 +307,27 @@ inline auto to_string_impl(const T& value)
     return std::to_string(value);
 }
 
-// Implementation for streamable types (excluding numeric and special types)
+// Implementation for types with cbegin/cend (containers) - uses iterator-based conversion
 template<typename T>
 inline auto to_string_impl(const T& value)
     -> typename std::enable_if<
         !has_to_string<T>::value && 
         !is_numeric<T>::value && 
         !is_special_type<T>::value &&
+        has_cbegin_cend<T>::value,
+        std::string
+    >::type {
+    return to_string(value.cbegin(), value.cend());
+}
+
+// Implementation for streamable types (excluding numeric, special types, and containers with cbegin/cend)
+template<typename T>
+inline auto to_string_impl(const T& value)
+    -> typename std::enable_if<
+        !has_to_string<T>::value && 
+        !is_numeric<T>::value && 
+        !is_special_type<T>::value &&
+        !has_cbegin_cend<T>::value &&
         is_streamable<T>::value, 
         std::string
     >::type {
@@ -325,6 +343,7 @@ inline auto to_string_impl(const T& value)
         !has_to_string<T>::value && 
         !is_numeric<T>::value && 
         !is_special_type<T>::value &&
+        !has_cbegin_cend<T>::value &&
         !is_streamable<T>::value, 
         std::string
     >::type {
@@ -351,8 +370,9 @@ inline auto to_string_impl(const T& value)
  * 
  * 1. If the type has a to_string() method, use it
  * 2. If the type is numeric, use std::to_string()
- * 3. If the type is streamable, use operator<<
- * 4. Otherwise, return type information with memory address
+ * 3. If the type has cbegin/cend methods (containers), use iterator-based conversion
+ * 4. If the type is streamable, use operator<<
+ * 5. Otherwise, return type information with memory address
  * 
  * Special handling for common types:
  * - std::string: returned as-is
@@ -423,7 +443,7 @@ inline void add_iterator_value(std::ostringstream& ss, const T& value, std::true
  * std::map<std::string, int> map = {{"a", 1}, {"b", 2}};
  * auto s2 = ustr::to_string(map.cbegin(), map.cend());  // "{"a": 1, "b": 2}"
  * @endcode
- */
+ */ 
 template<typename IterT>
 inline std::string to_string(IterT begin, IterT end) {
     // Check if we're dealing with a key-value pair container (like std::map)
