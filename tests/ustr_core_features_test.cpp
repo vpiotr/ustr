@@ -6,6 +6,8 @@
 #include <iomanip>  // for std::setprecision
 
 // Test classes for different scenarios
+// Note: These are duplicated in ustr_custom_classes_test.cpp
+// TODO: Consider refactoring to avoid duplication
 
 // Class with to_string method
 class CustomToString {
@@ -72,7 +74,8 @@ UTEST_FUNC_DEF2(StringConversion, CharArray) {
     UTEST_ASSERT_STR_EQUALS(result, "char array");
 }
 
-// Test custom to_string method
+// These tests have been moved to ustr_custom_classes_test.cpp
+// but we keep the declarations to avoid compilation errors
 UTEST_FUNC_DEF2(CustomToStringTest, BasicUsage) {
     CustomToString obj(42);
     std::string result = ustr::to_string(obj);
@@ -172,7 +175,7 @@ UTEST_FUNC_DEF2(BooleanType, False) {
     UTEST_ASSERT_STR_EQUALS(result, "false");
 }
 
-// Test non-streamable classes
+// Test non-streamable classes - moved to ustr_custom_classes_test.cpp
 UTEST_FUNC_DEF2(NonStreamableTest, TypeInfo) {
     NonStreamableClass obj(42);
     std::string result = ustr::to_string(obj);
@@ -186,21 +189,14 @@ UTEST_FUNC_DEF2(NonStreamableTest, TypeInfo) {
     UTEST_ASSERT_TRUE(result.find("]") == result.length() - 1);
 }
 
-// Test type trait detection
+// Test type trait detection - custom class tests moved to ustr_custom_classes_test.cpp
 UTEST_FUNC_DEF2(TypeTraits, HasToString) {
-    UTEST_ASSERT_TRUE(ustr::has_to_string<CustomToString>::value);
-    UTEST_ASSERT_TRUE(ustr::has_to_string<BothMethods>::value);
-    UTEST_ASSERT_FALSE(ustr::has_to_string<StreamableClass>::value);
-    UTEST_ASSERT_FALSE(ustr::has_to_string<NonStreamableClass>::value);
     UTEST_ASSERT_FALSE(ustr::has_to_string<int>::value);
 }
 
 UTEST_FUNC_DEF2(TypeTraits, IsStreamable) {
     UTEST_ASSERT_TRUE(ustr::is_streamable<int>::value);
     UTEST_ASSERT_TRUE(ustr::is_streamable<std::string>::value);
-    UTEST_ASSERT_TRUE(ustr::is_streamable<StreamableClass>::value);
-    UTEST_ASSERT_TRUE(ustr::is_streamable<BothMethods>::value);
-    UTEST_ASSERT_FALSE(ustr::is_streamable<NonStreamableClass>::value);
 }
 
 UTEST_FUNC_DEF2(TypeTraits, IsNumeric) {
@@ -216,7 +212,6 @@ UTEST_FUNC_DEF2(TypeTraits, IsNumeric) {
     UTEST_ASSERT_FALSE(ustr::is_numeric<signed char>::value);
     UTEST_ASSERT_FALSE(ustr::is_numeric<unsigned char>::value);
     UTEST_ASSERT_FALSE(ustr::is_numeric<std::string>::value);
-    UTEST_ASSERT_FALSE(ustr::is_numeric<CustomToString>::value);
 }
 
 // Test edge cases
@@ -327,13 +322,6 @@ int main() {
     UTEST_FUNC2(StringConversion, StringLiteral);
     UTEST_FUNC2(StringConversion, CharArray);
     
-    // Custom to_string tests
-    UTEST_FUNC2(CustomToStringTest, BasicUsage);
-    UTEST_FUNC2(CustomToStringTest, PrecedenceOverStreamable);
-    
-    // Streamable class tests
-    UTEST_FUNC2(StreamableTest, BasicStreamable);
-    
     // Numeric type tests
     UTEST_FUNC2(NumericTypes, Integer);
     UTEST_FUNC2(NumericTypes, NegativeInteger);
@@ -351,9 +339,6 @@ int main() {
     // Boolean tests
     UTEST_FUNC2(BooleanType, True);
     UTEST_FUNC2(BooleanType, False);
-    
-    // Non-streamable tests
-    UTEST_FUNC2(NonStreamableTest, TypeInfo);
     
     // Type trait tests
     UTEST_FUNC2(TypeTraits, HasToString);
