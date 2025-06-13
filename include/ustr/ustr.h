@@ -182,6 +182,11 @@ namespace details {
  * @{
  */
 
+// Constants for common string representations
+inline const char* get_null_string() {
+    return "null";
+}
+
 // Helper to detect if a type has first and second members (like std::pair)
 template<typename T, typename = void>
 struct has_first_second : std::false_type {};
@@ -203,7 +208,8 @@ struct is_special_type : std::integral_constant<bool,
     std::is_same<T, unsigned char>::value ||
     std::is_same<T, std::string>::value ||
     std::is_same<T, const char*>::value ||
-    std::is_same<typename std::decay<T>::type, char*>::value
+    std::is_same<typename std::decay<T>::type, char*>::value ||
+    std::is_same<T, std::nullptr_t>::value
 > {};
 
 // Implementation for types with custom to_string method (highest priority)
@@ -224,7 +230,7 @@ inline std::string to_string_impl(const std::string& value) {
 
 // Implementation for C-style strings
 inline std::string to_string_impl(const char* value) {
-    return value ? std::string(value) : std::string("(null)");
+    return value ? std::string(value) : std::string(get_null_string());
 }
 
 // Implementation for bool
@@ -245,6 +251,11 @@ inline std::string to_string_impl(signed char value) {
 // Implementation for unsigned char
 inline std::string to_string_impl(unsigned char value) {
     return std::string(1, static_cast<char>(value));
+}
+
+// Implementation for nullptr_t
+inline std::string to_string_impl(std::nullptr_t) {
+    return get_null_string();
 }
 
 // Implementation for numeric types (excluding special types)

@@ -236,10 +236,18 @@ UTEST_FUNC_DEF2(EdgeCases, ZeroValues) {
 
 UTEST_FUNC_DEF2(EdgeCases, NullCharPointer) {
     const char* null_ptr = nullptr;
-    // This should work without crashing, though result is implementation-defined
     std::string result = ustr::to_string(null_ptr);
-    // We can't predict the exact result, but it shouldn't crash
-    UTEST_ASSERT_TRUE(result.size() > 0);  // Basic sanity check - should have some content
+    UTEST_ASSERT_STR_EQUALS(result, "null");
+}
+
+UTEST_FUNC_DEF2(EdgeCases, NullptrType) {
+    std::nullptr_t null_value = nullptr;
+    std::string result = ustr::to_string(null_value);
+    UTEST_ASSERT_STR_EQUALS(result, "null");
+    
+    // Also test with literal nullptr
+    result = ustr::to_string(nullptr);
+    UTEST_ASSERT_STR_EQUALS(result, "null");
 }
 
 int main() {
@@ -278,6 +286,7 @@ int main() {
     UTEST_FUNC2(EdgeCases, EmptyString);
     UTEST_FUNC2(EdgeCases, ZeroValues);
     UTEST_FUNC2(EdgeCases, NullCharPointer);
+    UTEST_FUNC2(EdgeCases, NullptrType);
     
     UTEST_EPILOG();
 }

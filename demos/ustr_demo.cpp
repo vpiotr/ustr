@@ -155,6 +155,16 @@ void demonstrateEdgeCases() {
     // Special float values
     std::cout << "Infinity: " << ustr::to_string(std::numeric_limits<double>::infinity()) << "\n";
     std::cout << "NaN: " << ustr::to_string(std::numeric_limits<double>::quiet_NaN()) << "\n";
+    
+    // nullptr conversion
+    std::cout << "\n--- nullptr Conversion ---\n";
+    std::cout << "nullptr literal: " << ustr::to_string(nullptr) << "\n";
+    std::nullptr_t null_value = nullptr;
+    std::cout << "std::nullptr_t variable: " << ustr::to_string(null_value) << "\n";
+    
+    // Compare with null pointer string
+    const char* null_char_ptr = nullptr;
+    std::cout << "null char pointer: " << ustr::to_string(null_char_ptr) << "\n";
 }
 
 // Helper struct for debug logging (outside function for C++11 compatibility)
