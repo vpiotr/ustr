@@ -32,6 +32,57 @@ USTR provides a single, universal `to_string()` function that intelligently conv
 3. **Streamable types** - Uses `operator<<` with `std::ostringstream`
 4. **Fallback** - Returns type information with memory address for non-convertible types
 
+## Key Features at a Glance
+
+```cpp
+#include "ustr/ustr.h"
+#include <vector>
+#include <map>
+
+// Works with ANY type - one universal function
+class Point {
+    double x, y;
+public:
+    Point(double x, double y) : x(x), y(y) {}
+    std::string to_string() const { return "(" + std::to_string(x) + "," + std::to_string(y) + ")"; }
+};
+
+int main() {
+    // Basic types
+    auto s1 = ustr::to_string(42);              // "42"
+    auto s2 = ustr::to_string(3.14159);         // "3.141590"
+    auto s3 = ustr::to_string(true);            // "true"
+    auto s4 = ustr::to_string('A');             // "A"
+    
+    // Custom classes (automatic detection)
+    Point p(1.5, 2.7);
+    auto s5 = ustr::to_string(p);               // "(1.500000,2.700000)"
+    
+    // Containers and pairs (with specializations)
+    std::vector<int> vec = {1, 2, 3};
+    auto s6 = ustr::to_string(vec);             // "[1, 2, 3]"
+    
+    std::pair<int, std::string> pair = {42, "hello"};
+    auto s7 = ustr::to_string(pair);            // "(42, hello)"
+    
+    std::map<std::string, int> map = {{"key", 123}};
+    auto s8 = ustr::to_string(map);             // {"key": 123}
+    
+    // Custom specializations possible
+    long long x = 123456789012345LL;
+    auto s9 = ustr::to_string(x);               // Can be customized to "123456789012345LL"
+    
+    return 0;
+}
+```
+
+**What makes USTR special:**
+- 🎯 **One function for everything** - `ustr::to_string()` works with any type
+- 🧠 **Intelligent detection** - Automatically finds the best conversion method
+- ⚡ **Zero overhead** - Uses optimal conversion for each type
+- 🔧 **Fully customizable** - Easy specialization and custom implementations
+- 📦 **Header-only** - Just include and use, no dependencies
+
 ## Features
 
 - 🚀 **Header-only** - Just include `ustr.h` and start using
