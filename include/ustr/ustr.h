@@ -44,6 +44,13 @@
  *     std::vector<int> vec{1, 2, 3};
  *     std::string s7 = ustr::to_string(vec);          // "[1, 2, 3]"
  *     
+ *     // Pairs and tuples
+ *     std::pair<int, std::string> p{42, "pair"};
+ *     std::string s8 = ustr::to_string(p);            // "(42, pair)"
+ *     
+ *     std::tuple<int, double, bool> t{1, 2.5, true};
+ *     std::string s9 = ustr::to_string(t);            // "(1, 2.500000, true)"
+ *     
  *     return 0;
  * }
  * @endcode
@@ -75,6 +82,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <tuple>
 
 namespace ustr {
 
@@ -205,6 +213,28 @@ public:
     static const bool value = decltype(test<T>(0))::value;
 };
 
+/**
+ * @brief Detects if a type is std::tuple
+ * 
+ * This trait checks if a type T is a std::tuple specialization.
+ * This is useful for detecting tuples and providing specialized
+ * string conversion that formats all tuple elements.
+ * 
+ * @tparam T Type to check
+ * 
+ * @code{.cpp}
+ * static_assert(ustr::is_tuple<std::tuple<int, std::string>>::value, "tuple<int, string> is a tuple");
+ * static_assert(ustr::is_tuple<std::tuple<>>::value, "empty tuple is a tuple");
+ * static_assert(!ustr::is_tuple<std::pair<int, int>>::value, "pair is not a tuple");
+ * static_assert(!ustr::is_tuple<int>::value, "int is not a tuple");
+ * @endcode
+ */
+template<typename T>
+struct is_tuple : std::false_type {};
+
+template<typename... Args>
+struct is_tuple<std::tuple<Args...>> : std::true_type {};
+
 /** @} */ // end of type_traits group
 
 // Forward declarations for iterator-based to_string
@@ -246,6 +276,52 @@ struct is_pair : std::false_type {};
 
 template<typename T, typename U>
 struct is_pair<std::pair<T, U>> : std::true_type {};
+
+// Helper to detect if a type is std::tuple
+template<typename T>
+struct is_tuple : std::false_type {};
+
+template<typename... Args>
+struct is_tuple<std::tuple<Args...>> : std::true_type {};
+
+// C++11 compatible index sequence implementation
+template<std::size_t... Indices>
+struct index_sequence {};
+
+template<std::size_t N, std::size_t... Indices>
+struct make_index_sequence_impl : make_index_sequence_impl<N-1, N-1, Indices...> {};
+
+template<std::size_t... Indices>
+struct make_index_sequence_impl<0, Indices...> {
+    typedef index_sequence<Indices...> type;
+};
+
+template<std::size_t N>
+using make_index_sequence = typename make_index_sequence_impl<N>::type;
+
+// Helper functions for tuple conversion (C++11 compatible)
+template<typename Tuple, std::size_t... Indices>
+inline std::string tuple_to_string_impl(const Tuple& tuple, index_sequence<Indices...>) {
+    std::ostringstream ss;
+    ss << "(";
+    bool first = true;
+    // C++11 compatible element processing using recursive template expansion
+    auto process_elements = [&ss, &first](const std::string& element) {
+        if (!first) ss << ", ";
+        first = false;
+        ss << element;
+    };
+    // Use initializer list expansion for C++11 compatibility
+    (void)std::initializer_list<int>{(process_elements(to_string_forward(std::get<Indices>(tuple))), 0)...};
+    ss << ")";
+    return ss.str();
+}
+
+template<typename Tuple>
+inline std::string tuple_to_string(const Tuple& tuple) {
+    constexpr std::size_t size = std::tuple_size<Tuple>::value;
+    return tuple_to_string_impl(tuple, make_index_sequence<size>{});
+}
 
 // Helper to detect if a type is one of the special types that need explicit handling
 template<typename T>
@@ -333,6 +409,20 @@ inline auto to_string_impl(const T& value)
     return ss.str();
 }
 
+// Implementation for std::tuple types
+template<typename T>
+inline auto to_string_impl(const T& value)
+    -> typename std::enable_if<
+        !has_to_string<T>::value && 
+        !is_numeric<T>::value && 
+        !is_special_type<T>::value &&
+        !is_pair<T>::value &&
+        is_tuple<T>::value,
+        std::string
+    >::type {
+    return tuple_to_string(value);
+}
+
 // Implementation for types with cbegin/cend (containers) - uses iterator-based conversion
 template<typename T>
 inline auto to_string_impl(const T& value)
@@ -341,13 +431,14 @@ inline auto to_string_impl(const T& value)
         !is_numeric<T>::value && 
         !is_special_type<T>::value &&
         !is_pair<T>::value &&
+        !is_tuple<T>::value &&
         has_cbegin_cend<T>::value,
         std::string
     >::type {
     return to_string(value.cbegin(), value.cend());
 }
 
-// Implementation for streamable types (excluding numeric, special types, pairs, and containers with cbegin/cend)
+// Implementation for streamable types (excluding numeric, special types, pairs, tuples, and containers with cbegin/cend)
 template<typename T>
 inline auto to_string_impl(const T& value)
     -> typename std::enable_if<
@@ -355,6 +446,7 @@ inline auto to_string_impl(const T& value)
         !is_numeric<T>::value && 
         !is_special_type<T>::value &&
         !is_pair<T>::value &&
+        !is_tuple<T>::value &&
         !has_cbegin_cend<T>::value &&
         is_streamable<T>::value, 
         std::string
@@ -372,6 +464,7 @@ inline auto to_string_impl(const T& value)
         !is_numeric<T>::value && 
         !is_special_type<T>::value &&
         !is_pair<T>::value &&
+        !is_tuple<T>::value &&
         !has_cbegin_cend<T>::value &&
         !is_streamable<T>::value, 
         std::string
@@ -400,9 +493,10 @@ inline auto to_string_impl(const T& value)
  * 1. If the type has a to_string() method, use it
  * 2. If the type is numeric, use std::to_string()
  * 3. If the type is std::pair, format as (first, second)
- * 4. If the type has cbegin/cend methods (containers), use iterator-based conversion
- * 5. If the type is streamable, use operator<<
- * 6. Otherwise, return type information with memory address
+ * 4. If the type is std::tuple, format as (elem1, elem2, ...)
+ * 5. If the type has cbegin/cend methods (containers), use iterator-based conversion
+ * 6. If the type is streamable, use operator<<
+ * 7. Otherwise, return type information with memory address
  * 
  * Special handling for common types:
  * - std::string: returned as-is
@@ -434,9 +528,12 @@ inline auto to_string_impl(const T& value)
  * Point p(1, 2);
  * auto s6 = ustr::to_string(p);            // "(1,2)"
  * 
- * // Streamable type
- * std::pair<int, int> pair{1, 2};
- * auto s7 = ustr::to_string(pair);         // Implementation-defined, uses operator<<
+ * // Pairs and tuples
+ * std::pair<int, std::string> pair{42, "hello"};
+ * auto s7 = ustr::to_string(pair);         // "(42, hello)"
+ * 
+ * std::tuple<int, double, std::string> tuple{1, 2.5, "world"};
+ * auto s8 = ustr::to_string(tuple);        // "(1, 2.500000, world)"
  * @endcode
  */
 template<typename T>

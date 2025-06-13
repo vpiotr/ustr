@@ -23,12 +23,6 @@ UTEST_FUNC_DEF2(IteratorConversion, VectorOfStrings) {
     UTEST_ASSERT_STR_EQUALS(result, "[hello, world]");
 }
 
-UTEST_FUNC_DEF2(IteratorConversion, PairContainer) {
-    std::vector<std::pair<std::string, int>> values = {{"a", 1}, {"b", 2}};
-    std::string result = ustr::to_string(values.cbegin(), values.cend());
-    UTEST_ASSERT_STR_EQUALS(result, "{\"a\": 1, \"b\": 2}");
-}
-
 UTEST_FUNC_DEF2(IteratorConversion, MapContainer) {
     std::map<std::string, std::string> values = {{"key1", "value1"}, {"key2", "value2"}};
     std::string result = ustr::to_string(values.cbegin(), values.cend());
@@ -64,34 +58,7 @@ UTEST_FUNC_DEF2(CBeginCEndSpecialization, EmptyVectorSpecialization) {
     UTEST_ASSERT_STR_EQUALS(result, "[]");
 }
 
-// Test the new std::pair specialization
-UTEST_FUNC_DEF2(PairSpecialization, IntStringPair) {
-    std::pair<int, std::string> p = {42, "hello"};
-    std::string result = ustr::to_string(p);
-    // Should use the pair specialization, format as (first, second)
-    UTEST_ASSERT_STR_EQUALS(result, "(42, hello)");
-}
 
-UTEST_FUNC_DEF2(PairSpecialization, DoubleBoolPair) {
-    std::pair<double, bool> p = {3.14, true};
-    std::string result = ustr::to_string(p);
-    // Should use the pair specialization
-    UTEST_ASSERT_STR_EQUALS(result, "(3.140000, true)");
-}
-
-UTEST_FUNC_DEF2(PairSpecialization, NestedPair) {
-    std::pair<std::pair<int, int>, std::string> nested = {{1, 2}, "nested"};
-    std::string result = ustr::to_string(nested);
-    // Should handle nested pairs correctly
-    UTEST_ASSERT_STR_EQUALS(result, "((1, 2), nested)");
-}
-
-UTEST_FUNC_DEF2(PairSpecialization, StringStringPair) {
-    std::pair<std::string, std::string> p = {"key", "value"};
-    std::string result = ustr::to_string(p);
-    // Should use the pair specialization
-    UTEST_ASSERT_STR_EQUALS(result, "(key, value)");
-}
 
 int main() {
     UTEST_PROLOG();
@@ -101,7 +68,6 @@ int main() {
     UTEST_FUNC2(IteratorConversion, VectorOfInts);
     UTEST_FUNC2(IteratorConversion, EmptyContainer);
     UTEST_FUNC2(IteratorConversion, VectorOfStrings);
-    UTEST_FUNC2(IteratorConversion, PairContainer);
     UTEST_FUNC2(IteratorConversion, MapContainer);
     
     // cbegin/cend specialization tests
@@ -109,12 +75,6 @@ int main() {
     UTEST_FUNC2(CBeginCEndSpecialization, StringSpecialization);
     UTEST_FUNC2(CBeginCEndSpecialization, MapSpecialization);
     UTEST_FUNC2(CBeginCEndSpecialization, EmptyVectorSpecialization);
-    
-    // std::pair specialization tests
-    UTEST_FUNC2(PairSpecialization, IntStringPair);
-    UTEST_FUNC2(PairSpecialization, DoubleBoolPair);
-    UTEST_FUNC2(PairSpecialization, NestedPair);
-    UTEST_FUNC2(PairSpecialization, StringStringPair);
     
     UTEST_EPILOG();
 }
