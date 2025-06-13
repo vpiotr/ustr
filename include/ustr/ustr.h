@@ -5,7 +5,7 @@
  * @file ustr.h
  * @brief Universal string conversion library for C++
  * @author Extracted from utest library by Piotr Likus
- * @date 11/06/2025
+ * @date 13/06/2025
  * 
  * @mainpage ustr - Universal String Conversion Library
  * 

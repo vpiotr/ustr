@@ -22,6 +22,12 @@ foreach(DEMO_SOURCE ${DEMO_SOURCES})
     message(STATUS "Added demo: ${DEMO_NAME}")
 endforeach()
 
+# Add multi-module demo if directory exists
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/multi_module/CMakeLists.txt")
+    add_subdirectory(multi_module)
+    message(STATUS "Added multi-module demo")
+endif()
+
 # Custom target for running all demos
 add_custom_target(run_demos
     COMMENT "Running all demos"

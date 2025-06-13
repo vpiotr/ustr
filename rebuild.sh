@@ -25,7 +25,7 @@ BUILD_TYPE="Release"
 BUILD_TESTS="ON"
 BUILD_DEMOS="ON"
 BUILD_DOCS="OFF"
-CLEAN_BUILD=false
+CLEAN_BUILD=true # Default to clean build
 INSTALL_PREFIX=""
 VERBOSE=false
 
@@ -34,7 +34,7 @@ show_help() {
     echo ""
     echo "Options:"
     echo "  -t, --type TYPE       Build type: Debug|Release|MinSizeRel|RelWithDebInfo (default: Release)"
-    echo "  -c, --clean           Clean build directory before building"
+    echo "  --no-clean            Don't clean build directory before building"
     echo "  --no-tests            Don't build tests"
     echo "  --no-demos            Don't build demos"
     echo "  --with-docs           Build documentation (requires Doxygen)"
@@ -43,9 +43,10 @@ show_help() {
     echo "  -h, --help            Show this help message"
     echo ""
     echo "Examples:"
-    echo "  $0                                    # Release build with tests and demos"
-    echo "  $0 -t Debug -c                       # Clean debug build"
-    echo "  $0 --no-tests --prefix /usr/local    # Release build without tests, with custom prefix"
+    echo "  $0                                    # Clean Release build with tests and demos"
+    echo "  $0 -t Debug                          # Clean Debug build"
+    echo "  $0 --no-clean --no-tests            # Incremental Release build without tests"
+    echo "  $0 --prefix /usr/local               # Clean Release build with custom install prefix"
 }
 
 # Parse arguments
@@ -55,8 +56,8 @@ while [[ $# -gt 0 ]]; do
             BUILD_TYPE="$2"
             shift 2
             ;;
-        -c|--clean)
-            CLEAN_BUILD=true
+        --no-clean)
+            CLEAN_BUILD=false
             shift
             ;;
         --no-tests)
@@ -105,9 +106,9 @@ esac
 # Build directory
 BUILD_DIR="$PROJECT_ROOT/build"
 
-# Clean if requested
+# Clean if not explicitly disabled
 if [ "$CLEAN_BUILD" = true ]; then
-    echo -e "${YELLOW}Cleaning build directory...${NC}"
+    echo -e "${YELLOW}Cleaning build directory for complete rebuild...${NC}"
     rm -rf "$BUILD_DIR"
 fi
 
