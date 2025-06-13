@@ -222,9 +222,16 @@ UTEST_FUNC_DEF2(EdgeCases, EmptyString) {
 }
 
 UTEST_FUNC_DEF2(EdgeCases, ZeroValues) {
-    UTEST_ASSERT_STR_EQUALS(ustr::to_string(0), "0");
-    UTEST_ASSERT_STR_EQUALS(ustr::to_string(0.0), "0.000000");
-    UTEST_ASSERT_STR_EQUALS(ustr::to_string(0.0f), "0.000000");
+    UTEST_ASSERT_STR_EQUALS(ustr::to_string(0), "0");             // int
+    UTEST_ASSERT_STR_EQUALS(ustr::to_string(0.0), "0.000000");    // double
+    UTEST_ASSERT_STR_EQUALS(ustr::to_string(0.0f), "0.000000");   // float
+    UTEST_ASSERT_STR_EQUALS(ustr::to_string(0L), "0");            // long
+    UTEST_ASSERT_STR_EQUALS(ustr::to_string(0LL), "0");           // long long
+    UTEST_ASSERT_STR_EQUALS(ustr::to_string(0U), "0");            // unsigned int
+    UTEST_ASSERT_STR_EQUALS(ustr::to_string(0UL), "0");           // unsigned long
+    UTEST_ASSERT_STR_EQUALS(ustr::to_string(0ULL), "0");          // unsigned long long
+    UTEST_ASSERT_STR_EQUALS(ustr::to_string((short)0), "0");      // short
+    UTEST_ASSERT_STR_EQUALS(ustr::to_string((unsigned short)0), "0"); // unsigned short
 }
 
 UTEST_FUNC_DEF2(EdgeCases, NullCharPointer) {

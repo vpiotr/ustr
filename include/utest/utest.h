@@ -20,6 +20,7 @@
  * - Unicode and ASCII checkmarks for test results
  * - Exception testing (throw/no-throw assertions)
  * - String and numeric comparisons
+ * - String substring testing (contains/not contains)
  * - Comprehensive test reporting
  * 
  * @section usage_sec Basic Usage
@@ -33,6 +34,12 @@
  *     UTEST_ASSERT_GT(5, 3);
  * }
  * 
+ * UTEST_FUNC_DEF(StringTests) {
+ *     UTEST_ASSERT_STR_EQUALS("hello", "hello");
+ *     UTEST_ASSERT_STR_CONTAINS("hello world", "world");
+ *     UTEST_ASSERT_STR_NOT_CONTAINS("success message", "error");
+ * }
+ * 
  * UTEST_FUNC_DEF2(Calculator, Addition) {
  *     UTEST_ASSERT_EQUALS(add(2, 3), 5);
  * }
@@ -41,6 +48,7 @@
  *     UTEST_PROLOG();
  *     
  *     UTEST_FUNC(BasicMath);
+ *     UTEST_FUNC(StringTests);
  *     UTEST_FUNC2(Calculator, Addition);
  *     
  *     UTEST_EPILOG();
@@ -90,7 +98,7 @@
     #else
         #define __PRETTY_FUNCTION__ __FUNCTION__
     #endif
-#endif   
+#endif
 
 namespace utest {
 
@@ -254,6 +262,22 @@ namespace details {
     inline std::string convertToString(char value) {
         return std::string(1, value);
     }
+
+  // Helper for conversion to std::string (handles std::string and const char*)
+  inline std::string to_string_for_str_assert(const std::string& s) { return s; }
+  inline std::string to_string_for_str_assert(const char* s) { return std::string(s); }
+  inline std::string to_string_for_str_assert(char* s) { return std::string(s); }
+  inline std::string to_string_for_str_assert(const std::wstring& s) { return std::string(s.begin(), s.end()); }
+  inline std::string to_string_for_str_assert(const wchar_t* s) { return std::string(); } // Not implemented
+  template<typename T>
+  inline std::string to_string_for_str_assert(const T& s) { return convertToString(s); }
+
+  // Helper for string contains check, always converts both arguments
+  template<typename S1, typename S2>
+  inline bool str_contains(const S1& str, const S2& substr) {
+    return to_string_for_str_assert(str).find(to_string_for_str_assert(substr)) != std::string::npos;
+  }
+
 }
 
 /**
@@ -480,6 +504,57 @@ namespace details {
   }                                                                 \
 }
 
+/**
+ * @brief Assert that a string contains a substring
+ * @param str String to search in
+ * @param substr Substring to search for
+ * 
+ * Throws AssertionException if the string does not contain the substring.
+ * 
+ * @code{.cpp}
+ * UTEST_ASSERT_STR_CONTAINS("Hello world", "world");
+ * UTEST_ASSERT_STR_CONTAINS(myString, "important text");
+ * @endcode
+ */
+
+#define UTEST_ASSERT_STR_CONTAINS( a_string, a_substr )                                   \
+{                                                                                  \
+  if( !utest::details::str_contains(a_string, a_substr) )                                 \
+  {                                                                                \
+    std::string _utest_str = utest::details::to_string_for_str_assert(a_string);        \
+    std::string _utest_substr = utest::details::to_string_for_str_assert(a_substr);  \
+    std::ostringstream ss;                                                         \
+    ss << "String assertion failed: \"" << _utest_str                              \
+      << "\" does not contain \"" << _utest_substr << "\"";                       \
+    throw utest::AssertionException(ss.str(), __FILE__, __LINE__, __PRETTY_FUNCTION__); \
+  }                                                                                \
+}
+
+/**
+ * @brief Assert that a string does not contain a substring
+ * @param str String to search in
+ * @param substr Substring to search for
+ * 
+ * Throws AssertionException if the string contains the substring.
+ * 
+ * @code{.cpp}
+ * UTEST_ASSERT_STR_NOT_CONTAINS("Hello world", "error");
+ * UTEST_ASSERT_STR_NOT_CONTAINS(response, "failure");
+ * @endcode
+ */
+#define UTEST_ASSERT_STR_NOT_CONTAINS( a_string, a_substr )               \
+{                                                                   \
+  if( utest::details::str_contains(a_string, a_substr) )                                 \
+  {                                                                 \
+    std::string _utest_str = utest::details::to_string_for_str_assert(a_string);        \
+    std::string _utest_substr = utest::details::to_string_for_str_assert(a_substr);      \
+    std::ostringstream ss;                                          \
+    ss << "String assertion failed: \"" << _utest_str               \
+       << "\" contains \"" << _utest_substr << "\"";                \
+    throw utest::AssertionException(ss.str(), __FILE__, __LINE__, __PRETTY_FUNCTION__); \
+  }                                                                 \
+}
+
 #define UTEST_ASSERT_GT( x, y )                                    \
 {                                                                   \
   if( !( ( x ) > ( y ) ) )                                          \
@@ -559,13 +634,63 @@ namespace details {
   }                                                                 \
 }
 
-#define UTEST_ASSERT_GT_MSG( x, y, msg )                           \
+/**
+ * @brief Assert that a string contains a substring with custom message
+ * @param str String to search in
+ * @param substr Substring to search for
+ * @param msg Custom error message
+ * 
+ * Like UTEST_ASSERT_STR_CONTAINS but with a custom error message.
+ * 
+ * @code{.cpp}
+ * UTEST_ASSERT_STR_CONTAINS_MSG(response, "success", "Response should indicate success");
+ * @endcode
+ */
+#define UTEST_ASSERT_STR_CONTAINS_MSG( a_string, a_substr, a_msg )          \
 {                                                                   \
-  if( !( ( x ) > ( y ) ) )                                          \
+  if( !utest::details::str_contains(a_string, a_substr))         \
+  {                                                                 \
+    std::string _utest_str = utest::details::to_string_for_str_assert(a_string);        \
+    std::string _utest_substr = utest::details::to_string_for_str_assert(a_substr);      \
+    std::ostringstream ss;                                          \
+    ss << "String assertion failed, '" << a_msg << "': \""            \
+       << _utest_str << "\" does not contain \"" << _utest_substr << "\""; \
+    throw utest::AssertionException(ss.str(), __FILE__, __LINE__, __PRETTY_FUNCTION__); \
+  }                                                                 \
+}
+
+/**
+ * @brief Assert that a string does not contain a substring with custom message
+ * @param str String to search in
+ * @param substr Substring to search for
+ * @param msg Custom error message
+ * 
+ * Like UTEST_ASSERT_STR_NOT_CONTAINS but with a custom error message.
+ * 
+ * @code{.cpp}
+ * UTEST_ASSERT_STR_NOT_CONTAINS_MSG(response, "error", "Response should not contain errors");
+ * @endcode
+ */
+#define UTEST_ASSERT_STR_NOT_CONTAINS_MSG( a_string, a_substr, a_msg )      \
+{                                                                   \
+  if( utest::details::str_contains(a_string, a_substr) )         \
+  {                                                                 \
+    std::string _utest_str = utest::details::to_string_for_str_assert(a_string);        \
+    std::string _utest_substr = utest::details::to_string_for_str_assert(a_substr);      \
+    std::ostringstream ss;                                          \
+    ss << "String assertion failed, '" << a_msg << "': \""            \
+       << _utest_str << "\" contains \"" << _utest_substr << "\"";  \
+    throw utest::AssertionException(ss.str(), __FILE__, __LINE__, __PRETTY_FUNCTION__); \
+  }                                                                 \
+}
+
+#define UTEST_ASSERT_GT_MSG( x, y, msg )                          \
+{                                                                   \
+  if( !( ( x ) > ( y ) ) )                                         \
   {                                                                 \
     std::ostringstream ss;                                          \
     ss << "Assertion failed, '" << msg << "': "                     \
-       << UTEST_TO_STRING( ( x ) ) << " is not greater than "       \
+       << UTEST_TO_STRING( ( x ) ) << " is not greater than or equal to " \
        << UTEST_TO_STRING( ( y ) );                                 \
     throw utest::AssertionException(ss.str(), __FILE__, __LINE__, __PRETTY_FUNCTION__); \
   }                                                                 \
@@ -661,6 +786,34 @@ namespace details {
  */
 #define UTEST_ASSERT_SNEQ( x, y ) UTEST_ASSERT_STR_NOT_EQUALS( x, y )
 
+/**
+ * @brief Short alias for UTEST_ASSERT_STR_CONTAINS
+ * @param str String to search in
+ * @param substr Substring to search for
+ */
+#define UTEST_ASSERT_SC( str, substr ) UTEST_ASSERT_STR_CONTAINS( str, substr )
+
+/**
+ * @brief Short alias for UTEST_ASSERT_STR_NOT_CONTAINS
+ * @param str String to search in
+ * @param substr Substring to search for
+ */
+#define UTEST_ASSERT_SNC( str, substr ) UTEST_ASSERT_STR_NOT_CONTAINS( str, substr )
+
+/**
+ * @brief Short alias for UTEST_ASSERT_STR_CONTAINS
+ * @param str String to search in
+ * @param substr Substring to search for
+ */
+#define UTEST_ASSERT_SC( str, substr ) UTEST_ASSERT_STR_CONTAINS( str, substr )
+
+/**
+ * @brief Short alias for UTEST_ASSERT_STR_NOT_CONTAINS
+ * @param str String to search in
+ * @param substr Substring to search for
+ */
+#define UTEST_ASSERT_SNC( str, substr ) UTEST_ASSERT_STR_NOT_CONTAINS( str, substr )
+
 /** @} */ // end of aliases group
 
 namespace details {
@@ -703,10 +856,11 @@ namespace details {
         static bool verbose = false;  // Default to non-verbose
         return verbose;
     }
-
+    
     template<typename Func>
     void testFunc(const char *name, Func f, bool &failed) {
         TestResult result;
+        result.name = name;
         result.name = name;
         result.group = ""; // No group for single tests
         result.passed = true;

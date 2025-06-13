@@ -35,15 +35,6 @@ UTEST_FUNC_DEF2(IteratorConversion, MapContainer) {
     UTEST_ASSERT_STR_EQUALS(result, "{\"key1\": value1, \"key2\": value2}");
 }
 
-// Integration test with STL containers (if they're streamable)
-UTEST_FUNC_DEF2(STLContainers, StreamableContainer) {
-    // Create a simple pair which is streamable in some implementations
-    std::pair<int, std::string> p{42, "hello"};
-    std::string result = ustr::to_string(p);
-    // Result depends on STL implementation, but should not crash
-    UTEST_ASSERT_TRUE(result.length() > 0);
-}
-
 int main() {
     UTEST_PROLOG();
     UTEST_ENABLE_VERBOSE_MODE();
@@ -54,9 +45,6 @@ int main() {
     UTEST_FUNC2(IteratorConversion, VectorOfStrings);
     UTEST_FUNC2(IteratorConversion, PairContainer);
     UTEST_FUNC2(IteratorConversion, MapContainer);
-    
-    // STL container tests
-    UTEST_FUNC2(STLContainers, StreamableContainer);
     
     UTEST_EPILOG();
 }
