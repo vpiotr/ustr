@@ -235,6 +235,37 @@ struct is_tuple : std::false_type {};
 template<typename... Args>
 struct is_tuple<std::tuple<Args...>> : std::true_type {};
 
+/**
+ * @brief Detects if a type has a custom specialization
+ * 
+ * This trait can be specialized to indicate that a type has its own
+ * custom to_string_impl specialization and should be handled before
+ * the standard type detection logic. This is useful for providing
+ * completely custom implementations for specific types.
+ * 
+ * @tparam T Type to check
+ * 
+ * @code{.cpp}
+ * // Specialize for your custom type
+ * namespace ustr {
+ *     template<>
+ *     struct has_custom_specialization<MyType> : std::true_type {};
+ * }
+ * 
+ * // Then provide the specialization
+ * namespace ustr {
+ *     namespace details {
+ *         template<>
+ *         inline std::string to_string_impl<MyType>(const MyType& value) {
+ *             return "custom:" + std::to_string(value.getValue());
+ *         }
+ *     }
+ * }
+ * @endcode
+ */
+template<typename T>
+struct has_custom_specialization : std::false_type {};
+
 /** @} */ // end of type_traits group
 
 // Forward declarations for iterator-based to_string

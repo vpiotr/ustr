@@ -39,8 +39,9 @@ CUSTOM_CLASSES_TEST_BIN="$BUILD_DIR/bin/ustr_custom_classes_test"
 FORMAT_CONTEXT_TEST_BIN="$BUILD_DIR/bin/ustr_format_context_test"
 PAIR_TEST_BIN="$BUILD_DIR/bin/ustr_pair_test"
 TUPLE_TEST_BIN="$BUILD_DIR/bin/ustr_tuple_test"
+CUSTOM_SPECIALIZATION_TEST_BIN="$BUILD_DIR/bin/ustr_custom_specialization_test"
 
-if [ ! -x "$CORE_TEST_BIN" ] || [ ! -x "$CONTAINER_TEST_BIN" ] || [ ! -x "$CUSTOM_CLASSES_TEST_BIN" ] || [ ! -x "$FORMAT_CONTEXT_TEST_BIN" ] || [ ! -x "$PAIR_TEST_BIN" ] || [ ! -x "$TUPLE_TEST_BIN" ]; then
+if [ ! -x "$CORE_TEST_BIN" ] || [ ! -x "$CONTAINER_TEST_BIN" ] || [ ! -x "$CUSTOM_CLASSES_TEST_BIN" ] || [ ! -x "$FORMAT_CONTEXT_TEST_BIN" ] || [ ! -x "$PAIR_TEST_BIN" ] || [ ! -x "$TUPLE_TEST_BIN" ] || [ ! -x "$CUSTOM_SPECIALIZATION_TEST_BIN" ]; then
     echo -e "${RED}Test binaries not found or not executable:${NC}"
     [ ! -x "$CORE_TEST_BIN" ] && echo -e "${RED}- $CORE_TEST_BIN${NC}"
     [ ! -x "$CONTAINER_TEST_BIN" ] && echo -e "${RED}- $CONTAINER_TEST_BIN${NC}"
@@ -48,6 +49,7 @@ if [ ! -x "$CORE_TEST_BIN" ] || [ ! -x "$CONTAINER_TEST_BIN" ] || [ ! -x "$CUSTO
     [ ! -x "$FORMAT_CONTEXT_TEST_BIN" ] && echo -e "${RED}- $FORMAT_CONTEXT_TEST_BIN${NC}"
     [ ! -x "$PAIR_TEST_BIN" ] && echo -e "${RED}- $PAIR_TEST_BIN${NC}"
     [ ! -x "$TUPLE_TEST_BIN" ] && echo -e "${RED}- $TUPLE_TEST_BIN${NC}"
+    [ ! -x "$CUSTOM_SPECIALIZATION_TEST_BIN" ] && echo -e "${RED}- $CUSTOM_SPECIALIZATION_TEST_BIN${NC}"
     echo -e "${YELLOW}Try running the build script first: ./build.sh${NC}"
     exit 1
 fi
@@ -87,8 +89,13 @@ echo -e "${BLUE}Running Tuple Tests:${NC}"
 "$TUPLE_TEST_BIN"
 tuple_exit_code=$?
 
+echo ""
+echo -e "${BLUE}Running Custom Specialization Tests:${NC}"
+"$CUSTOM_SPECIALIZATION_TEST_BIN"
+custom_specialization_exit_code=$?
+
 # Check exit codes
-if [ $core_exit_code -eq 0 ] && [ $container_exit_code -eq 0 ] && [ $custom_classes_exit_code -eq 0 ] && [ $format_context_exit_code -eq 0 ] && [ $pair_exit_code -eq 0 ] && [ $tuple_exit_code -eq 0 ]; then
+if [ $core_exit_code -eq 0 ] && [ $container_exit_code -eq 0 ] && [ $custom_classes_exit_code -eq 0 ] && [ $format_context_exit_code -eq 0 ] && [ $pair_exit_code -eq 0 ] && [ $tuple_exit_code -eq 0 ] && [ $custom_specialization_exit_code -eq 0 ]; then
     exit_code=0
 else
     exit_code=1

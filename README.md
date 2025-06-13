@@ -245,6 +245,50 @@ namespace ustr {
 }
 ```
 
+### Custom `to_string_impl` Specializations
+
+For complete control over how specific types are converted, you can provide explicit specializations of the `to_string_impl` function:
+
+```cpp
+// Step 1: Mark the type as having a custom specialization
+namespace ustr {
+    template<>
+    struct has_custom_specialization<MyType> : std::true_type {};
+}
+
+// Step 2: Provide the specialization
+namespace ustr {
+    namespace details {
+        template<>
+        inline std::string to_string_impl<MyType>(const MyType& value) {
+            return "custom:" + std::to_string(value.getValue());
+        }
+    }
+}
+```
+
+This approach gives you the highest priority in the conversion hierarchy and allows you to completely override the default behavior for any type.
+
+**Example with long long:**
+```cpp
+namespace ustr {
+    template<>
+    struct has_custom_specialization<long long> : std::true_type {};
+}
+
+namespace ustr {
+    namespace details {
+        template<>
+        inline std::string to_string_impl<long long>(const long long& value) {
+            return std::to_string(value) + "LL";  // Add suffix
+        }
+    }
+}
+
+long long x = 123456789012345LL;
+auto result = ustr::to_string(x);  // "123456789012345LL"
+```
+
 ## API Reference
 
 ### Main Function
@@ -277,6 +321,10 @@ Boolean constant indicating if type `T` supports `operator<<`.
 #### `ustr::is_numeric<T>::value`
 
 Boolean constant indicating if type `T` should use `std::to_string()`.
+
+#### `ustr::has_custom_specialization<T>::value`
+
+Boolean constant indicating if type `T` has a custom `to_string_impl` specialization. This trait can be specialized to mark types that have explicit specializations defined, giving them the highest priority in the conversion hierarchy.
 
 ## Building and Testing
 
