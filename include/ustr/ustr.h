@@ -901,25 +901,26 @@ public:
 /** @} */ // end of formatters group
 
 /**
- * @brief Escape and quote a string with specified delimiter and escape characters
+ * @brief Escape and quote a string with specified start/end delimiters and escape character
  * 
- * This function adds delimiter characters around a string and escapes any
- * occurrences of the delimiter or escape character within the string.
- * It properly handles UTF-8 encoded characters.
+ * This function adds start and end delimiter characters around a string and escapes any
+ * occurrences of either delimiter or the escape character within the string.
+ * UTF-8 handling can be enabled or disabled for performance optimization.
  * 
  * @param s Input string to be quoted and escaped
- * @param delim Delimiter character to use for quoting (default: '"')
- * @param escape Escape character to use for escaping (default: '\\')
+ * @param start_delim Starting delimiter character
+ * @param end_delim Ending delimiter character
+ * @param escape Escape character to use for escaping
+ * @param is_utf8 Whether to enable UTF-8 multi-byte character detection (default: true)
  * @return Quoted and escaped string
  * 
  * @code{.cpp}
- * auto s1 = ustr::quoted_str("hello");           // "\"hello\""
- * auto s2 = ustr::quoted_str("say \"hi\"");      // "\"say \\\"hi\\\"\""
- * auto s3 = ustr::quoted_str("path\\file");      // "\"path\\\\file\""
- * auto s4 = ustr::quoted_str("test", '\'');      // "'test'"
+ * auto s1 = ustr::quoted_str("hello", '[', ']', '\\');          // "[hello]" (UTF-8 enabled by default in previous versions, now defaults to false)
+ * auto s2 = ustr::quoted_str("say [hi]", '[', ']', '/', false); // "[say /[hi/]]" (ASCII-only mode)
+ * auto s3 = ustr::quoted_str("test", '<', '>', '\\', true);     // "<test>" (UTF-8 enabled)
  * @endcode
  */
-inline std::string quoted_str(const std::string& s, char delim = '"', char escape = '\\') {
+inline std::string quoted_str(const std::string& s, char start_delim, char end_delim, char escape, bool is_utf8) {
     std::string result;
     
     // Estimate capacity: original size + 2 delimiters + potential escapes
@@ -927,34 +928,45 @@ inline std::string quoted_str(const std::string& s, char delim = '"', char escap
     result.reserve(s.length() + 2 + (s.length() / 4));
     
     // Add opening delimiter
-    result += delim;
+    result += start_delim;
     
     if (escape != '\0') {
-        // Escape mode: scan for delim and escape characters
-        for (std::size_t i = 0; i < s.length(); ) {
-            unsigned char c = static_cast<unsigned char>(s[i]);
-            
-            // Check if this is a UTF-8 multi-byte character
-            if (c >= 0x80) {
-                // UTF-8 multi-byte character
-                std::size_t byte_count = 1;
-                if ((c & 0xE0) == 0xC0) byte_count = 2;      // 110xxxxx
-                else if ((c & 0xF0) == 0xE0) byte_count = 3; // 1110xxxx
-                else if ((c & 0xF8) == 0xF0) byte_count = 4; // 11110xxx
+        // Escape mode: scan for start_delim, end_delim, and escape characters
+        if (is_utf8) {
+            // UTF-8 aware mode: handle multi-byte characters
+            for (std::size_t i = 0; i < s.length(); ) {
+                unsigned char c = static_cast<unsigned char>(s[i]);
                 
-                // Add the entire UTF-8 sequence
-                for (std::size_t j = 0; j < byte_count && i + j < s.length(); ++j) {
-                    result += s[i + j];
+                // Check if this is a UTF-8 multi-byte character
+                if (c >= 0x80) {
+                    // UTF-8 multi-byte character
+                    std::size_t byte_count = 1;
+                    if ((c & 0xE0) == 0xC0) byte_count = 2;      // 110xxxxx
+                    else if ((c & 0xF0) == 0xE0) byte_count = 3; // 1110xxxx
+                    else if ((c & 0xF8) == 0xF0) byte_count = 4; // 11110xxx
+                    
+                    // Add the entire UTF-8 sequence
+                    for (std::size_t j = 0; j < byte_count && i + j < s.length(); ++j) {
+                        result += s[i + j];
+                    }
+                    i += byte_count;
+                } else {
+                    // ASCII character - check if it needs escaping
+                    char ch = static_cast<char>(c);
+                    if (ch == start_delim || ch == end_delim || ch == escape) {
+                        result += escape;
+                    }
+                    result += ch;
+                    ++i;
                 }
-                i += byte_count;
-            } else {
-                // ASCII character - check if it needs escaping
-                char ch = static_cast<char>(c);
-                if (ch == delim || ch == escape) {
+            }
+        } else {
+            // ASCII-only mode: treat each byte independently (high performance)
+            for (char ch : s) {
+                if (ch == start_delim || ch == end_delim || ch == escape) {
                     result += escape;
                 }
                 result += ch;
-                ++i;
             }
         }
     } else {
@@ -963,10 +975,16 @@ inline std::string quoted_str(const std::string& s, char delim = '"', char escap
     }
     
     // Add closing delimiter
-    result += delim;
+    result += end_delim;
     
     return result;
 }
-}
+
+// Overload for backward compatibility and convenience, defaulting to is_utf8 = false for performance.
+inline std::string quoted_str(const std::string& s, char start_delim, char end_delim, char escape) {
+    return quoted_str(s, start_delim, end_delim, escape, false); // Default to ASCII-only (false)
+}    
+
+} // namespace ustr
 
 #endif // __USTR_H__
