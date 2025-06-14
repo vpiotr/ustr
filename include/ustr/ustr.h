@@ -900,6 +900,73 @@ public:
 
 /** @} */ // end of formatters group
 
-} // namespace ustr
+/**
+ * @brief Escape and quote a string with specified delimiter and escape characters
+ * 
+ * This function adds delimiter characters around a string and escapes any
+ * occurrences of the delimiter or escape character within the string.
+ * It properly handles UTF-8 encoded characters.
+ * 
+ * @param s Input string to be quoted and escaped
+ * @param delim Delimiter character to use for quoting (default: '"')
+ * @param escape Escape character to use for escaping (default: '\\')
+ * @return Quoted and escaped string
+ * 
+ * @code{.cpp}
+ * auto s1 = ustr::quoted_str("hello");           // "\"hello\""
+ * auto s2 = ustr::quoted_str("say \"hi\"");      // "\"say \\\"hi\\\"\""
+ * auto s3 = ustr::quoted_str("path\\file");      // "\"path\\\\file\""
+ * auto s4 = ustr::quoted_str("test", '\'');      // "'test'"
+ * @endcode
+ */
+inline std::string quoted_str(const std::string& s, char delim = '"', char escape = '\\') {
+    std::string result;
+    
+    // Estimate capacity: original size + 2 delimiters + potential escapes
+    // We use a conservative estimate of 25% potential escapes
+    result.reserve(s.length() + 2 + (s.length() / 4));
+    
+    // Add opening delimiter
+    result += delim;
+    
+    if (escape != '\0') {
+        // Escape mode: scan for delim and escape characters
+        for (std::size_t i = 0; i < s.length(); ) {
+            unsigned char c = static_cast<unsigned char>(s[i]);
+            
+            // Check if this is a UTF-8 multi-byte character
+            if (c >= 0x80) {
+                // UTF-8 multi-byte character
+                std::size_t byte_count = 1;
+                if ((c & 0xE0) == 0xC0) byte_count = 2;      // 110xxxxx
+                else if ((c & 0xF0) == 0xE0) byte_count = 3; // 1110xxxx
+                else if ((c & 0xF8) == 0xF0) byte_count = 4; // 11110xxx
+                
+                // Add the entire UTF-8 sequence
+                for (std::size_t j = 0; j < byte_count && i + j < s.length(); ++j) {
+                    result += s[i + j];
+                }
+                i += byte_count;
+            } else {
+                // ASCII character - check if it needs escaping
+                char ch = static_cast<char>(c);
+                if (ch == delim || ch == escape) {
+                    result += escape;
+                }
+                result += ch;
+                ++i;
+            }
+        }
+    } else {
+        // No escaping: just add all characters
+        result += s;
+    }
+    
+    // Add closing delimiter
+    result += delim;
+    
+    return result;
+}
+}
 
 #endif // __USTR_H__

@@ -24,6 +24,9 @@ add_executable(ustr_tuple_test ustr_tuple_test.cpp)
 # Custom specialization test executable
 add_executable(ustr_custom_specialization_test ustr_custom_specialization_test.cpp)
 
+# Quoted string test executable
+add_executable(ustr_quoted_str_test ustr_quoted_str_test.cpp)
+
 # Link with ustr (header-only library)
 target_link_libraries(ustr_core_features_test PRIVATE ustr::ustr)
 target_link_libraries(ustr_container_test PRIVATE ustr::ustr)
@@ -32,6 +35,7 @@ target_link_libraries(ustr_format_context_test PRIVATE ustr::ustr)
 target_link_libraries(ustr_pair_test PRIVATE ustr::ustr)
 target_link_libraries(ustr_tuple_test PRIVATE ustr::ustr)
 target_link_libraries(ustr_custom_specialization_test PRIVATE ustr::ustr)
+target_link_libraries(ustr_quoted_str_test PRIVATE ustr::ustr)
 
 # Set output directory
 set_target_properties(ustr_core_features_test PROPERTIES
@@ -55,6 +59,9 @@ set_target_properties(ustr_tuple_test PROPERTIES
 set_target_properties(ustr_custom_specialization_test PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+set_target_properties(ustr_quoted_str_test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
 
 # Add tests to CTest
 add_test(NAME ustr_core_features_tests COMMAND ustr_core_features_test)
@@ -64,6 +71,7 @@ add_test(NAME ustr_format_context_tests COMMAND ustr_format_context_test)
 add_test(NAME ustr_pair_tests COMMAND ustr_pair_test)
 add_test(NAME ustr_tuple_tests COMMAND ustr_tuple_test)
 add_test(NAME ustr_custom_specialization_tests COMMAND ustr_custom_specialization_test)
+add_test(NAME ustr_quoted_str_tests COMMAND ustr_quoted_str_test)
 
 # Test discovery for better integration with IDEs
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.10)
@@ -75,7 +83,7 @@ endif()
 # Custom target for running tests
 add_custom_target(run_tests
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
-    DEPENDS ustr_core_features_test ustr_container_test ustr_custom_classes_test ustr_format_context_test ustr_pair_test ustr_tuple_test ustr_custom_specialization_test
+    DEPENDS ustr_core_features_test ustr_container_test ustr_custom_classes_test ustr_format_context_test ustr_pair_test ustr_tuple_test ustr_custom_specialization_test ustr_quoted_str_test
     COMMENT "Running all tests"
 )
 
@@ -88,8 +96,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(ustr_pair_test PRIVATE DEBUG=1)
     target_compile_definitions(ustr_tuple_test PRIVATE DEBUG=1)
     target_compile_definitions(ustr_custom_specialization_test PRIVATE DEBUG=1)
+    target_compile_definitions(ustr_quoted_str_test PRIVATE DEBUG=1)
 endif()
 
 message(STATUS "Test configuration:")
-message(STATUS "  Test executables: ustr_core_features_test, ustr_container_test, ustr_custom_classes_test, ustr_format_context_test, ustr_pair_test, ustr_tuple_test, ustr_custom_specialization_test")
+message(STATUS "  Test executables: ustr_core_features_test, ustr_container_test, ustr_custom_classes_test, ustr_format_context_test, ustr_pair_test, ustr_tuple_test, ustr_custom_specialization_test, ustr_quoted_str_test")
 message(STATUS "  Output directory: ${CMAKE_BINARY_DIR}/bin")
