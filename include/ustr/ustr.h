@@ -306,6 +306,19 @@ namespace details {
 template<typename T>
 std::string to_string_forward(const T& value);
 
+// Shared function to apply quotation if needed for any type
+template<typename T>
+inline std::string apply_quotation_if_needed(const T& value) {
+    using value_type = typename std::decay<T>::type;
+    constexpr bool should_quote = is_quotable_string<value_type>::value;
+    
+    if (should_quote) {
+        return "\"" + to_string_forward(value) + "\"";
+    } else {
+        return to_string_forward(value);
+    }
+}
+
 // Constants for common string representations
 inline const char* get_null_string() {
     return "null";
@@ -364,8 +377,8 @@ inline std::string tuple_to_string_impl(const Tuple& tuple, index_sequence<Indic
         first = false;
         ss << element;
     };
-    // Use initializer list expansion for C++11 compatibility
-    (void)std::initializer_list<int>{(process_elements(to_string_forward(std::get<Indices>(tuple))), 0)...};
+    // Use initializer list expansion for C++11 compatibility with quotation support
+    (void)std::initializer_list<int>{(process_elements(apply_quotation_if_needed(std::get<Indices>(tuple))), 0)...};
     ss << ")";
     return ss.str();
 }
@@ -458,7 +471,7 @@ inline auto to_string_impl(const T& value)
         std::string
     >::type {
     std::ostringstream ss;
-    ss << "(" << to_string_forward(value.first) << ", " << to_string_forward(value.second) << ")";
+    ss << "(" << apply_quotation_if_needed(value.first) << ", " << apply_quotation_if_needed(value.second) << ")";
     return ss.str();
 }
 
@@ -674,39 +687,15 @@ inline std::string to_string(IterT begin, IterT end) {
 // Helper function to add iterator value when it's not a pair
 template<typename T>
 inline void add_iterator_value(std::ostringstream& ss, const T& value, std::false_type) {
-    // Check if the value is a string type that should be quoted
-    using value_type = typename std::decay<T>::type;
-    constexpr bool should_quote_value = is_quotable_string<value_type>::value;
-    
-    if (should_quote_value) {
-        ss << "\"" << to_string(value) << "\"";
-    } else {
-        ss << to_string(value);
-    }
+    // Use shared quotation function
+    ss << details::apply_quotation_if_needed(value);
 }
 
 // Helper function to add iterator value when it's a pair
 template<typename T>
 inline void add_iterator_value(std::ostringstream& ss, const T& value, std::true_type) {
-    // Check if the key and value are string types (should be quoted) or other types (should not be quoted)
-    using key_type = typename std::decay<decltype(value.first)>::type;
-    using value_type = typename std::decay<decltype(value.second)>::type;
-    constexpr bool should_quote_key = is_quotable_string<key_type>::value;
-    constexpr bool should_quote_value = is_quotable_string<value_type>::value;
-    
-    // Quote key if needed
-    if (should_quote_key) {
-        ss << "\"" << to_string(value.first) << "\": ";
-    } else {
-        ss << to_string(value.first) << ": ";
-    }
-    
-    // Quote value if needed
-    if (should_quote_value) {
-        ss << "\"" << to_string(value.second) << "\"";
-    } else {
-        ss << to_string(value.second);
-    }
+    // Use shared quotation function for both key and value
+    ss << details::apply_quotation_if_needed(value.first) << ": " << details::apply_quotation_if_needed(value.second);
 }
 
 /** @} */ // end of api group
