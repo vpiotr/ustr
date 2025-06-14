@@ -674,7 +674,15 @@ inline std::string to_string(IterT begin, IterT end) {
 // Helper function to add iterator value when it's not a pair
 template<typename T>
 inline void add_iterator_value(std::ostringstream& ss, const T& value, std::false_type) {
-    ss << to_string(value);
+    // Check if the value is a string type that should be quoted
+    using value_type = typename std::decay<T>::type;
+    constexpr bool should_quote_value = is_quotable_string<value_type>::value;
+    
+    if (should_quote_value) {
+        ss << "\"" << to_string(value) << "\"";
+    } else {
+        ss << to_string(value);
+    }
 }
 
 // Helper function to add iterator value when it's a pair
