@@ -280,6 +280,25 @@ UTEST_FUNC_DEF2(TypeTraits, HasCBeginCEnd) {
     UTEST_ASSERT_FALSE(ustr::has_cbegin_cend<BothMethods>::value);
 }
 
+UTEST_FUNC_DEF2(TypeTraits, IsCArray) {
+    // C-style arrays (non-char) should be detected
+    UTEST_ASSERT_TRUE(ustr::is_c_array<int[5]>::value);
+    UTEST_ASSERT_TRUE(ustr::is_c_array<double[3]>::value);
+    UTEST_ASSERT_TRUE(ustr::is_c_array<const char*[2]>::value);
+    UTEST_ASSERT_TRUE(ustr::is_c_array<std::string[4]>::value);
+    
+    // char arrays should NOT be detected (treated as C-strings)
+    UTEST_ASSERT_FALSE(ustr::is_c_array<char[10]>::value);
+    UTEST_ASSERT_FALSE(ustr::is_c_array<signed char[5]>::value);
+    UTEST_ASSERT_FALSE(ustr::is_c_array<unsigned char[5]>::value);
+    
+    // Non-array types should not be detected
+    UTEST_ASSERT_FALSE(ustr::is_c_array<int>::value);
+    UTEST_ASSERT_FALSE(ustr::is_c_array<std::vector<int>>::value);
+    UTEST_ASSERT_FALSE(ustr::is_c_array<std::string>::value);
+    UTEST_ASSERT_FALSE(ustr::is_c_array<char*>::value);  // pointer, not array
+}
+
 // Test edge cases
 UTEST_FUNC_DEF2(EdgeCases, EmptyString) {
     std::string empty = "";
@@ -316,6 +335,56 @@ UTEST_FUNC_DEF2(EdgeCases, NullptrType) {
     UTEST_ASSERT_STR_EQUALS(result, "null");
 }
 
+// Test C-style arrays support
+UTEST_FUNC_DEF2(CStyleArrays, IntArray) {
+    int arr[5] = {1, 2, 3, 4, 5};
+    std::string result = ustr::to_string(arr);
+    UTEST_ASSERT_STR_EQUALS(result, "[1, 2, 3, 4, 5]");
+}
+
+UTEST_FUNC_DEF2(CStyleArrays, DoubleArray) {
+    double arr[3] = {1.5, 2.7, 3.14};
+    std::string result = ustr::to_string(arr);
+    // Note: exact string comparison for floating point may be fragile
+    // We test that it's formatted as an array with brackets
+    UTEST_ASSERT_TRUE(result.front() == '[');
+    UTEST_ASSERT_TRUE(result.back() == ']');
+    UTEST_ASSERT_TRUE(result.find("1.5") != std::string::npos);
+    UTEST_ASSERT_TRUE(result.find("2.7") != std::string::npos);
+    UTEST_ASSERT_TRUE(result.find("3.14") != std::string::npos);
+}
+
+UTEST_FUNC_DEF2(CStyleArrays, StringArray) {
+    const char* arr[3] = {"hello", "world", "test"};
+    std::string result = ustr::to_string(arr);
+    UTEST_ASSERT_STR_EQUALS(result, "[\"hello\", \"world\", \"test\"]");
+}
+
+UTEST_FUNC_DEF2(CStyleArrays, BoolArray) {
+    bool arr[4] = {true, false, true, false};
+    std::string result = ustr::to_string(arr);
+    UTEST_ASSERT_STR_EQUALS(result, "[true, false, true, false]");
+}
+
+UTEST_FUNC_DEF2(CStyleArrays, CharArrayAsCString) {
+    char arr[6] = {'h', 'e', 'l', 'l', 'o', '\0'};
+    std::string result = ustr::to_string(arr);
+    // char arrays should be treated as C-strings, not arrays
+    UTEST_ASSERT_STR_EQUALS(result, "hello");
+}
+
+UTEST_FUNC_DEF2(CStyleArrays, SingleElementArray) {
+    int arr[1] = {42};
+    std::string result = ustr::to_string(arr);
+    UTEST_ASSERT_STR_EQUALS(result, "[42]");
+}
+
+UTEST_FUNC_DEF2(CStyleArrays, MixedTypeArrayWithString) {
+    std::string arr[2] = {"first", "second"};
+    std::string result = ustr::to_string(arr);
+    UTEST_ASSERT_STR_EQUALS(result, "[\"first\", \"second\"]");
+}
+
 int main() {
     UTEST_PROLOG();
     UTEST_ENABLE_VERBOSE_MODE();
@@ -349,12 +418,22 @@ int main() {
     UTEST_FUNC2(TypeTraits, IsNumeric);
     UTEST_FUNC2(TypeTraits, IsQuotableString);
     UTEST_FUNC2(TypeTraits, HasCBeginCEnd);
+    UTEST_FUNC2(TypeTraits, IsCArray);
     
     // Edge case tests
     UTEST_FUNC2(EdgeCases, EmptyString);
     UTEST_FUNC2(EdgeCases, ZeroValues);
     UTEST_FUNC2(EdgeCases, NullCharPointer);
     UTEST_FUNC2(EdgeCases, NullptrType);
+    
+    // C-style array tests
+    UTEST_FUNC2(CStyleArrays, IntArray);
+    UTEST_FUNC2(CStyleArrays, DoubleArray);
+    UTEST_FUNC2(CStyleArrays, StringArray);
+    UTEST_FUNC2(CStyleArrays, BoolArray);
+    UTEST_FUNC2(CStyleArrays, CharArrayAsCString);
+    UTEST_FUNC2(CStyleArrays, SingleElementArray);
+    UTEST_FUNC2(CStyleArrays, MixedTypeArrayWithString);
     
     UTEST_EPILOG();
 }

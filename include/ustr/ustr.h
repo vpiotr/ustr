@@ -288,6 +288,27 @@ struct is_quotable_string : std::integral_constant<bool,
     std::is_same<typename std::decay<T>::type, char*>::value
 > {};
 
+/**
+ * @brief Detects if a type is a C-style array
+ * 
+ * This trait checks if a type T is a C-style array (e.g., int[5], char[10]).
+ * It excludes char arrays that should be treated as C-strings.
+ * 
+ * @tparam T Type to check
+ * 
+ * @code{.cpp}
+ * static_assert(ustr::is_c_array<int[5]>::value, "int[5] is a C-style array");
+ * static_assert(!ustr::is_c_array<char[10]>::value, "char[10] is treated as C-string");
+ * @endcode
+ */
+template<typename T>
+struct is_c_array : std::integral_constant<bool, 
+    std::is_array<T>::value && 
+    !std::is_same<typename std::remove_extent<T>::type, char>::value &&
+    !std::is_same<typename std::remove_extent<T>::type, signed char>::value &&
+    !std::is_same<typename std::remove_extent<T>::type, unsigned char>::value
+> {};
+
 /** @} */ // end of type_traits group
 
 // Forward declarations for iterator-based to_string
@@ -306,17 +327,33 @@ namespace details {
 template<typename T>
 std::string to_string_forward(const T& value);
 
-// Shared function to apply quotation if needed for any type
+// Optimized shared function to apply quotation if needed for any type
+// Uses template specialization to avoid runtime conditionals
+
+// Helper implementation for non-quotable types (no quotes needed)
+template<typename T>
+inline std::string apply_quotation_impl(const T& value, std::false_type) {
+    return to_string_forward(value);
+}
+
+// Helper implementation for quotable types (quotes needed)
+template<typename T>
+inline std::string apply_quotation_impl(const T& value, std::true_type) {
+    // Optimized string concatenation using reserve for better performance
+    std::string str_value = to_string_forward(value);
+    std::string result;
+    result.reserve(str_value.length() + 2); // Reserve space for quotes + content
+    result += '"';
+    result += str_value;
+    result += '"';
+    return result;
+}
+
+// Main function that dispatches to appropriate implementation
 template<typename T>
 inline std::string apply_quotation_if_needed(const T& value) {
     using value_type = typename std::decay<T>::type;
-    constexpr bool should_quote = is_quotable_string<value_type>::value;
-    
-    if (should_quote) {
-        return "\"" + to_string_forward(value) + "\"";
-    } else {
-        return to_string_forward(value);
-    }
+    return apply_quotation_impl(value, typename is_quotable_string<value_type>::type{});
 }
 
 // Constants for common string representations
@@ -498,13 +535,14 @@ inline auto to_string_impl(const T& value)
         !is_special_type<T>::value &&
         !is_pair<T>::value &&
         !is_tuple<T>::value &&
+        !is_c_array<T>::value &&
         has_cbegin_cend<T>::value,
         std::string
     >::type {
     return to_string(value.cbegin(), value.cend());
 }
 
-// Implementation for streamable types (excluding numeric, special types, pairs, tuples, and containers with cbegin/cend)
+// Implementation for streamable types (excluding numeric, special types, pairs, tuples, c-arrays, and containers with cbegin/cend)
 template<typename T>
 inline auto to_string_impl(const T& value)
     -> typename std::enable_if<
@@ -513,6 +551,7 @@ inline auto to_string_impl(const T& value)
         !is_special_type<T>::value &&
         !is_pair<T>::value &&
         !is_tuple<T>::value &&
+        !is_c_array<T>::value &&
         !has_cbegin_cend<T>::value &&
         is_streamable<T>::value, 
         std::string
@@ -531,12 +570,38 @@ inline auto to_string_impl(const T& value)
         !is_special_type<T>::value &&
         !is_pair<T>::value &&
         !is_tuple<T>::value &&
+        !is_c_array<T>::value &&
         !has_cbegin_cend<T>::value &&
         !is_streamable<T>::value, 
         std::string
     >::type {
     std::ostringstream ss;
     ss << "[" << typeid(T).name() << " at " << &value << "]";
+    return ss.str();
+}
+
+// Implementation for C-style arrays (excluding char arrays which are handled as C-strings)
+template<typename T>
+inline auto to_string_impl(const T& value)
+    -> typename std::enable_if<
+        !has_to_string<T>::value && 
+        !is_numeric<T>::value && 
+        !is_special_type<T>::value &&
+        !is_pair<T>::value &&
+        !is_tuple<T>::value &&
+        is_c_array<T>::value,
+        std::string
+    >::type {
+    constexpr std::size_t array_size = std::extent<T>::value;
+    std::ostringstream ss;
+    ss << '[';
+    
+    for (std::size_t i = 0; i < array_size; ++i) {
+        if (i > 0) ss << ", ";
+        ss << apply_quotation_if_needed(value[i]);
+    }
+    
+    ss << ']';
     return ss.str();
 }
 
