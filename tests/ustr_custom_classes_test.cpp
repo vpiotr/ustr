@@ -24,7 +24,7 @@ private:
 public:
     StreamableClass(const std::string& name) : name_(name) {}
     friend std::ostream& operator<<(std::ostream& os, const StreamableClass& obj) {
-        return os << "StreamableClass[" << obj.name_ << "]";
+        return os << "StreamableClass[" << ustr::quoted_str(obj.name_) << "]";
     }
 };
 
@@ -68,7 +68,7 @@ UTEST_FUNC_DEF2(CustomToStringTest, PrecedenceOverStreamable) {
 UTEST_FUNC_DEF2(StreamableTest, BasicStreamable) {
     StreamableClass obj("test");
     std::string result = ustr::to_string(obj);
-    UTEST_ASSERT_STR_EQUALS(result, "StreamableClass[test]");
+    UTEST_ASSERT_STR_EQUALS(result, "StreamableClass[\"test\"]");
 }
 
 // Test non-streamable classes

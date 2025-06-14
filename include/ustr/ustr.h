@@ -315,6 +315,11 @@ struct is_c_array : std::integral_constant<bool,
 template<typename IterT>
 std::string to_string(IterT begin, IterT end);
 
+// Forward declaration for quoted_str to resolve ordering issues
+inline std::string quoted_str(const std::string& s, char start_delim, char end_delim, char escape, bool is_utf8);
+// Also forward declare the overload for quoted_str
+inline std::string quoted_str(const std::string& s, char start_delim, char end_delim, char escape);
+
 namespace details {
 
 /**
@@ -322,6 +327,11 @@ namespace details {
  * @brief Internal implementation functions - do not use directly
  * @{
  */
+
+// Constants for default quoting behavior
+constexpr char DEFAULT_QUOTATION_DELIMITER = '"';
+constexpr char DEFAULT_QUOTATION_ESCAPE_CHAR = '\\';
+constexpr bool DEFAULT_QUOTATION_IS_UTF8 = false;
 
 // Forward declaration for recursive calls
 template<typename T>
@@ -339,14 +349,12 @@ inline std::string apply_quotation_impl(const T& value, std::false_type) {
 // Helper implementation for quotable types (quotes needed)
 template<typename T>
 inline std::string apply_quotation_impl(const T& value, std::true_type) {
-    // Optimized string concatenation using reserve for better performance
-    std::string str_value = to_string_forward(value);
-    std::string result;
-    result.reserve(str_value.length() + 2); // Reserve space for quotes + content
-    result += '"';
-    result += str_value;
-    result += '"';
-    return result;
+    // Use ustr::quoted_str with defined constants
+    return ustr::quoted_str(to_string_forward(value), 
+                            DEFAULT_QUOTATION_DELIMITER, 
+                            DEFAULT_QUOTATION_DELIMITER, 
+                            DEFAULT_QUOTATION_ESCAPE_CHAR, 
+                            DEFAULT_QUOTATION_IS_UTF8);
 }
 
 // Main function that dispatches to appropriate implementation
@@ -598,7 +606,7 @@ inline auto to_string_impl(const T& value)
     
     for (std::size_t i = 0; i < array_size; ++i) {
         if (i > 0) ss << ", ";
-        ss << apply_quotation_if_needed(value[i]);
+        ss << details::apply_quotation_if_needed(value[i]);
     }
     
     ss << ']';
@@ -982,8 +990,19 @@ inline std::string quoted_str(const std::string& s, char start_delim, char end_d
 
 // Overload for backward compatibility and convenience, defaulting to is_utf8 = false for performance.
 inline std::string quoted_str(const std::string& s, char start_delim, char end_delim, char escape) {
-    return quoted_str(s, start_delim, end_delim, escape, false); // Default to ASCII-only (false)
+    return quoted_str(s, start_delim, end_delim, escape, details::DEFAULT_QUOTATION_IS_UTF8);
 }    
+
+// Overloads for convenient default quoting of a string
+inline std::string quoted_str(const std::string& s) {
+    return quoted_str(s, details::DEFAULT_QUOTATION_DELIMITER, details::DEFAULT_QUOTATION_DELIMITER, details::DEFAULT_QUOTATION_ESCAPE_CHAR, details::DEFAULT_QUOTATION_IS_UTF8);
+}
+
+inline std::string quoted_str(const char* s) {
+    if (!s) return details::get_null_string();
+    return quoted_str(std::string(s), details::DEFAULT_QUOTATION_DELIMITER, details::DEFAULT_QUOTATION_DELIMITER, details::DEFAULT_QUOTATION_ESCAPE_CHAR, details::DEFAULT_QUOTATION_IS_UTF8);
+}
+
 
 } // namespace ustr
 

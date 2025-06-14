@@ -27,7 +27,7 @@ private:
 public:
     StreamableClass(const std::string& name) : name_(name) {}
     friend std::ostream& operator<<(std::ostream& os, const StreamableClass& obj) {
-        return os << "StreamableClass[" << obj.name_ << "]";
+        return os << "StreamableClass[" << ustr::quoted_str(obj.name_) << "]";
     }
 };
 

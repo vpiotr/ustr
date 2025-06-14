@@ -26,7 +26,7 @@ public:
     
     // Custom to_string method - highest priority
     std::string to_string() const {
-        return make_ + " " + model_ + " (" + std::to_string(year_) + ")";
+        return ustr::quoted_str(make_) + " " + ustr::quoted_str(model_) + " (" + std::to_string(year_) + ")";
     }
     
     std::string getMake() const { return make_; }
@@ -47,7 +47,7 @@ public:
     // Streamable class without to_string - second priority
     friend std::ostream& operator<<(std::ostream& os, const Engine& engine) {
         return os << "Engine(" << engine.displacement_ << "L, " 
-                  << engine.cylinders_ << " cylinders, " << engine.fuel_type_ << ")";
+                  << engine.cylinders_ << " cylinders, " << ustr::quoted_str(engine.fuel_type_) << ")";
     }
     
     double getDisplacement() const { return displacement_; }
@@ -292,7 +292,7 @@ void demonstrateComplexNestedStructures() {
         std::string department;
         
         std::string to_string() const {
-            return name + " (ID: " + std::to_string(id) + ", Dept: " + department + ")";
+            return ustr::quoted_str(name) + " (ID: " + std::to_string(id) + ", Dept: " + ustr::quoted_str(department) + ")";
         }
     };
     
