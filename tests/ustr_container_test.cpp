@@ -27,7 +27,7 @@ UTEST_FUNC_DEF2(IteratorConversion, VectorOfStrings) {
 UTEST_FUNC_DEF2(IteratorConversion, MapContainerStringKeys) {
     std::map<std::string, std::string> values = {{"key1", "value1"}, {"key2", "value2"}};
     std::string result = ustr::to_string(values.cbegin(), values.cend());
-    UTEST_ASSERT_STR_EQUALS(result, "{\"key1\": value1, \"key2\": value2}");
+    UTEST_ASSERT_STR_EQUALS(result, "{\"key1\": \"value1\", \"key2\": \"value2\"}");
 }
 
 UTEST_FUNC_DEF2(IteratorConversion, MapContainerNumericKeys) {

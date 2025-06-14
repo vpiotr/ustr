@@ -266,6 +266,28 @@ struct is_tuple<std::tuple<Args...>> : std::true_type {};
 template<typename T>
 struct has_custom_specialization : std::false_type {};
 
+/**
+ * @brief Detects if a type should be quoted when converted to string
+ * 
+ * This trait identifies string-like types that should be wrapped in quotes
+ * when used as keys in maps or values in containers. By default, this applies
+ * to std::string, const char*, and char*.
+ * 
+ * @tparam T Type to check
+ * 
+ * @code{.cpp}
+ * static_assert(ustr::is_quotable_string<std::string>::value);
+ * static_assert(ustr::is_quotable_string<const char*>::value);
+ * static_assert(!ustr::is_quotable_string<int>::value);
+ * @endcode
+ */
+template<typename T>
+struct is_quotable_string : std::integral_constant<bool,
+    std::is_same<typename std::decay<T>::type, std::string>::value ||
+    std::is_same<typename std::decay<T>::type, const char*>::value ||
+    std::is_same<typename std::decay<T>::type, char*>::value
+> {};
+
 /** @} */ // end of type_traits group
 
 // Forward declarations for iterator-based to_string
@@ -658,16 +680,24 @@ inline void add_iterator_value(std::ostringstream& ss, const T& value, std::fals
 // Helper function to add iterator value when it's a pair
 template<typename T>
 inline void add_iterator_value(std::ostringstream& ss, const T& value, std::true_type) {
-    // Check if the key is a string type (should be quoted) or numeric type (should not be quoted)
+    // Check if the key and value are string types (should be quoted) or other types (should not be quoted)
     using key_type = typename std::decay<decltype(value.first)>::type;
-    constexpr bool should_quote_key = std::is_same<key_type, std::string>::value ||
-                                      std::is_same<key_type, const char*>::value ||
-                                      std::is_same<key_type, char*>::value;
+    using value_type = typename std::decay<decltype(value.second)>::type;
+    constexpr bool should_quote_key = is_quotable_string<key_type>::value;
+    constexpr bool should_quote_value = is_quotable_string<value_type>::value;
     
+    // Quote key if needed
     if (should_quote_key) {
-        ss << "\"" << to_string(value.first) << "\": " << to_string(value.second);
+        ss << "\"" << to_string(value.first) << "\": ";
     } else {
-        ss << to_string(value.first) << ": " << to_string(value.second);
+        ss << to_string(value.first) << ": ";
+    }
+    
+    // Quote value if needed
+    if (should_quote_value) {
+        ss << "\"" << to_string(value.second) << "\"";
+    } else {
+        ss << to_string(value.second);
     }
 }
 

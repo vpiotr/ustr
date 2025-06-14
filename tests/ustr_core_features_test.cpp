@@ -231,6 +231,27 @@ UTEST_FUNC_DEF2(TypeTraits, IsNumeric) {
     UTEST_ASSERT_FALSE(ustr::is_numeric<std::string>::value);
 }
 
+UTEST_FUNC_DEF2(TypeTraits, IsQuotableString) {
+    // String types should be quotable
+    UTEST_ASSERT_TRUE(ustr::is_quotable_string<std::string>::value);
+    UTEST_ASSERT_TRUE(ustr::is_quotable_string<const char*>::value);
+    UTEST_ASSERT_TRUE(ustr::is_quotable_string<char*>::value);
+    
+    // Numeric types should not be quotable
+    UTEST_ASSERT_FALSE(ustr::is_quotable_string<int>::value);
+    UTEST_ASSERT_FALSE(ustr::is_quotable_string<double>::value);
+    UTEST_ASSERT_FALSE(ustr::is_quotable_string<float>::value);
+    UTEST_ASSERT_FALSE(ustr::is_quotable_string<long>::value);
+    
+    // Other types should not be quotable
+    UTEST_ASSERT_FALSE(ustr::is_quotable_string<bool>::value);
+    UTEST_ASSERT_FALSE(ustr::is_quotable_string<char>::value);
+    
+    // Use type aliases to avoid macro parsing issues
+    typedef std::vector<int> VectorInt;
+    UTEST_ASSERT_FALSE(ustr::is_quotable_string<VectorInt>::value);
+}
+
 UTEST_FUNC_DEF2(TypeTraits, HasCBeginCEnd) {
     // Use type aliases to avoid macro parsing issues with nested templates
     typedef std::vector<int> VectorInt;
@@ -326,6 +347,7 @@ int main() {
     UTEST_FUNC2(TypeTraits, HasToString);
     UTEST_FUNC2(TypeTraits, IsStreamable);
     UTEST_FUNC2(TypeTraits, IsNumeric);
+    UTEST_FUNC2(TypeTraits, IsQuotableString);
     UTEST_FUNC2(TypeTraits, HasCBeginCEnd);
     
     // Edge case tests
