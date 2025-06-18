@@ -317,6 +317,27 @@ struct is_c_array : std::integral_constant<bool,
     !std::is_same<typename std::remove_extent<T>::type, unsigned char>::value
 > {};
 
+/**
+ * @brief Detects if a type is an enum (both scoped and unscoped)
+ * 
+ * This trait checks if a type T is an enumeration type, including both
+ * traditional enums and scoped enums (enum class). This is useful for
+ * providing specialized handling of enums by converting them to their
+ * underlying integer value.
+ * 
+ * @tparam T Type to check
+ * 
+ * @code{.cpp}
+ * enum Color { RED, GREEN, BLUE };
+ * enum class Status { PENDING, APPROVED, REJECTED };
+ * static_assert(ustr::is_enum<Color>::value, "Color is an enum");
+ * static_assert(ustr::is_enum<Status>::value, "Status is an enum class");
+ * static_assert(!ustr::is_enum<int>::value, "int is not an enum");
+ * @endcode
+ */
+template<typename T>
+struct is_enum : std::integral_constant<bool, std::is_enum<T>::value> {};
+
 /** @} */ // end of type_traits group
 
 // Forward declarations for iterator-based to_string
@@ -523,6 +544,18 @@ inline auto to_string_impl(const T& value)
     return std::to_string(value);
 }
 
+// Implementation for enum types (both scoped and unscoped)
+template<typename T>
+inline auto to_string_impl(const T& value)
+    -> typename std::enable_if<
+        is_enum<T>::value &&
+        !has_to_string<T>::value && 
+        !is_special_type<T>::value, 
+        std::string
+    >::type {
+    return std::to_string(static_cast<typename std::underlying_type<T>::type>(value));
+}
+
 // Implementation for std::pair types
 template<typename T>
 inline auto to_string_impl(const T& value)
@@ -530,6 +563,7 @@ inline auto to_string_impl(const T& value)
         !has_to_string<T>::value && 
         !is_numeric<T>::value && 
         !is_special_type<T>::value &&
+        !is_enum<T>::value &&
         is_pair<T>::value,
         std::string
     >::type {
@@ -545,6 +579,7 @@ inline auto to_string_impl(const T& value)
         !has_to_string<T>::value && 
         !is_numeric<T>::value && 
         !is_special_type<T>::value &&
+        !is_enum<T>::value &&
         !is_pair<T>::value &&
         is_tuple<T>::value,
         std::string
@@ -559,6 +594,7 @@ inline auto to_string_impl(const T& value)
         !has_to_string<T>::value && 
         !is_numeric<T>::value && 
         !is_special_type<T>::value &&
+        !is_enum<T>::value &&
         !is_pair<T>::value &&
         !is_tuple<T>::value &&
         !is_c_array<T>::value &&
@@ -568,13 +604,14 @@ inline auto to_string_impl(const T& value)
     return to_string(value.cbegin(), value.cend());
 }
 
-// Implementation for streamable types (excluding numeric, special types, pairs, tuples, c-arrays, and containers with cbegin/cend)
+// Implementation for streamable types (excluding numeric, special types, enums, pairs, tuples, c-arrays, and containers with cbegin/cend)
 template<typename T>
 inline auto to_string_impl(const T& value)
     -> typename std::enable_if<
         !has_to_string<T>::value && 
         !is_numeric<T>::value && 
         !is_special_type<T>::value &&
+        !is_enum<T>::value &&
         !is_pair<T>::value &&
         !is_tuple<T>::value &&
         !is_c_array<T>::value &&
@@ -594,6 +631,7 @@ inline auto to_string_impl(const T& value)
         !has_to_string<T>::value && 
         !is_numeric<T>::value && 
         !is_special_type<T>::value &&
+        !is_enum<T>::value &&
         !is_pair<T>::value &&
         !is_tuple<T>::value &&
         !is_c_array<T>::value &&
@@ -613,6 +651,7 @@ inline auto to_string_impl(const T& value)
         !has_to_string<T>::value && 
         !is_numeric<T>::value && 
         !is_special_type<T>::value &&
+        !is_enum<T>::value &&
         !is_pair<T>::value &&
         !is_tuple<T>::value &&
         is_c_array<T>::value,

@@ -460,6 +460,56 @@ void demonstrateRealWorldScenario() {
     std::cout << "\\nService Records (Vehicle ID -> Services):\\n" << ustr::to_string(service_records) << "\n";
 }
 
+void demonstrateEnumSupport() {
+    std::cout << "\n=== Enum Type Conversions ===\n";
+    
+    // Traditional enum (unscoped)
+    enum Color { RED, GREEN, BLUE };
+    Color car_color = GREEN;
+    Color bike_color = BLUE;
+    std::cout << "Traditional enum Color::GREEN: " << ustr::to_string(car_color) << "\n";
+    std::cout << "Traditional enum Color::BLUE: " << ustr::to_string(bike_color) << "\n";
+    
+    // Scoped enum (enum class) with custom underlying type
+    enum class Status : int { PENDING = 100, APPROVED = 200, REJECTED = 300 };
+    Status order_status = Status::APPROVED;
+    Status payment_status = Status::PENDING;
+    std::cout << "Scoped enum Status::APPROVED: " << ustr::to_string(order_status) << "\n";
+    std::cout << "Scoped enum Status::PENDING: " << ustr::to_string(payment_status) << "\n";
+    
+    // Enum with custom values (not starting from 0)
+    enum Priority { LOW = 10, MEDIUM = 50, HIGH = 100 };
+    Priority task_priority = HIGH;
+    Priority email_priority = LOW;
+    std::cout << "Custom values Priority::HIGH: " << ustr::to_string(task_priority) << "\n";
+    std::cout << "Custom values Priority::LOW: " << ustr::to_string(email_priority) << "\n";
+    
+    // Enum with underlying type specification
+    enum class Size : unsigned char { SMALL = 1, MEDIUM = 5, LARGE = 10, XLARGE = 20 };
+    Size shirt_size = Size::LARGE;
+    Size cup_size = Size::SMALL;
+    std::cout << "Typed enum Size::LARGE: " << ustr::to_string(shirt_size) << "\n";
+    std::cout << "Typed enum Size::SMALL: " << ustr::to_string(cup_size) << "\n";
+    
+    // Enums in containers
+    std::vector<Color> colors = {RED, GREEN, BLUE};
+    std::cout << "Vector of enums: " << ustr::to_string(colors) << "\n";
+    
+    std::map<Status, std::string> status_messages = {
+        {Status::PENDING, "Please wait"},
+        {Status::APPROVED, "All good"},
+        {Status::REJECTED, "Not allowed"}
+    };
+    std::cout << "Map with enum keys: " << ustr::to_string(status_messages) << "\n";
+    
+    // Enums in pairs and tuples
+    std::pair<Color, Size> item_spec = {BLUE, Size::MEDIUM};
+    std::cout << "Pair with enums: " << ustr::to_string(item_spec) << "\n";
+    
+    std::tuple<Priority, Status, Color> task_info = {HIGH, Status::APPROVED, RED};
+    std::cout << "Tuple with enums: " << ustr::to_string(task_info) << "\n";
+}
+
 int main() {
     std::cout << "USTR Universal String Conversion Library - Comprehensive Demo\n";
     std::cout << "=============================================================\n";
@@ -474,6 +524,7 @@ int main() {
         demonstrateComplexNestedStructures();
         demonstrateScopedFormatting();
         demonstrateRealWorldScenario();
+        demonstrateEnumSupport();
         
         std::cout << "\n=== Demo Complete ===\n";
         std::cout << "This demo showcased:\n";
@@ -486,6 +537,7 @@ int main() {
         std::cout << "• Complex nested data structures\n";
         std::cout << "• Scoped custom formatters\n";
         std::cout << "• Real-world scenario with vehicle fleet management\n";
+        std::cout << "• Enum type conversions (traditional enums and scoped enum classes)\n";
         std::cout << "\nAll conversions used a single universal function: ustr::to_string()\n";
         
     } catch (const std::exception& e) {
