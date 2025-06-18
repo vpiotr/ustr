@@ -84,6 +84,11 @@
 #include <memory>
 #include <tuple>
 
+// Include string_view for C++17 and later
+#if __cplusplus >= 201703L
+#include <string_view>
+#endif
+
 namespace ustr {
 
 /**
@@ -286,6 +291,9 @@ struct is_quotable_string : std::integral_constant<bool,
     std::is_same<typename std::decay<T>::type, std::string>::value ||
     std::is_same<typename std::decay<T>::type, const char*>::value ||
     std::is_same<typename std::decay<T>::type, char*>::value
+#if __cplusplus >= 201703L
+    || std::is_same<typename std::decay<T>::type, std::string_view>::value
+#endif
 > {};
 
 /**
@@ -445,6 +453,9 @@ struct is_special_type : std::integral_constant<bool,
     std::is_same<T, const char*>::value ||
     std::is_same<typename std::decay<T>::type, char*>::value ||
     std::is_same<T, std::nullptr_t>::value
+#if __cplusplus >= 201703L
+    || std::is_same<T, std::string_view>::value
+#endif
 > {};
 
 // Implementation for types with custom to_string method (highest priority)
@@ -492,6 +503,13 @@ inline std::string to_string_impl(unsigned char value) {
 inline std::string to_string_impl(std::nullptr_t) {
     return get_null_string();
 }
+
+#if __cplusplus >= 201703L
+// Implementation for std::string_view
+inline std::string to_string_impl(std::string_view value) {
+    return std::string(value);
+}
+#endif
 
 // Implementation for numeric types (excluding special types)
 template<typename T>

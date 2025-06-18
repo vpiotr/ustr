@@ -12,6 +12,11 @@
 #include <deque>
 #include <list>
 
+// Include string_view for C++17 and later
+#if __cplusplus >= 201703L
+#include <string_view>
+#endif
+
 // Demo classes to showcase different conversion scenarios
 
 class Vehicle {
@@ -117,6 +122,17 @@ void demonstrateBasicTypes() {
     std::cout << "std::string: " << ustr::to_string(str) << "\n";
     std::cout << "string literal: " << ustr::to_string("Hello from literal") << "\n";
     
+#if __cplusplus >= 201703L
+    // C++17+ string_view support
+    std::string_view sv = "std::string_view example";
+    std::cout << "std::string_view: " << ustr::to_string(sv) << "\n";
+    
+    // String view from substring
+    std::string original = "This is a long string";
+    std::string_view substr(original.c_str() + 10, 4); // "long"
+    std::cout << "string_view substring: " << ustr::to_string(substr) << "\n";
+#endif
+    
     // Pointers
     std::cout << "nullptr: " << ustr::to_string(nullptr) << "\n";
     const char* null_ptr = nullptr;
@@ -209,6 +225,13 @@ void demonstrateContainers() {
     std::set<int> int_set = {5, 3, 8, 1, 9, 2};
     std::cout << "Set<int>: " << ustr::to_string(int_set) << "\n";
     
+#if __cplusplus >= 201703L
+    // C++17+ string_view containers
+    std::string str1 = "first", str2 = "second", str3 = "third";
+    std::vector<std::string_view> sv_vector = {str1, str2, str3};
+    std::cout << "Vector<string_view>: " << ustr::to_string(sv_vector) << "\n";
+#endif
+    
     // Empty containers
     std::vector<int> empty_vector;
     std::cout << "Empty vector: " << ustr::to_string(empty_vector) << "\n";
@@ -233,6 +256,14 @@ void demonstrateMapSpecializations() {
         {1.5, "one and half"}, {2.718, "e"}, {3.14159, "pi"}
     };
     std::cout << "Map<double, string>: " << ustr::to_string(double_key_map) << "\n";
+    
+#if __cplusplus >= 201703L
+    // C++17+ string_view keys and values (should be quoted like regular strings)
+    std::string k1 = "view_key1", k2 = "view_key2";
+    std::string v1 = "view_value1", v2 = "view_value2";
+    std::map<std::string_view, std::string_view> sv_map = {{k1, v1}, {k2, v2}};
+    std::cout << "Map<string_view, string_view>: " << ustr::to_string(sv_map) << "\n";
+#endif
     
     // char keys (should NOT be quoted, as they're not string types)
     std::map<char, int> char_key_map = {

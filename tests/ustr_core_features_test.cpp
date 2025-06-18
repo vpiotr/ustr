@@ -5,6 +5,11 @@
 #include <map>
 #include <iomanip>  // for std::setprecision
 
+// Include string_view for C++17 and later
+#if __cplusplus >= 201703L
+#include <string_view>
+#endif
+
 // Test classes for different scenarios
 // Note: These are duplicated in ustr_custom_classes_test.cpp
 // TODO: Consider refactoring to avoid duplication
@@ -90,6 +95,29 @@ UTEST_FUNC_DEF2(StringConversion, CharArray) {
     std::string result = ustr::to_string(arr);
     UTEST_ASSERT_STR_EQUALS(result, "char array");
 }
+
+#if __cplusplus >= 201703L
+// Test std::string_view basic functionality (C++17+)
+UTEST_FUNC_DEF2(StringConversion, BasicStringView) {
+    std::string_view sv = "Hello, World!";
+    std::string result = ustr::to_string(sv);
+    UTEST_ASSERT_STR_EQUALS(result, "Hello, World!");
+}
+
+UTEST_FUNC_DEF2(StringConversion, StringViewFromString) {
+    std::string original = "Test string";
+    std::string_view sv(original);
+    std::string result = ustr::to_string(sv);
+    UTEST_ASSERT_STR_EQUALS(result, "Test string");
+}
+
+UTEST_FUNC_DEF2(StringConversion, StringViewSubstring) {
+    std::string original = "Hello, World!";
+    std::string_view sv(original.c_str() + 7, 5); // "World"
+    std::string result = ustr::to_string(sv);
+    UTEST_ASSERT_STR_EQUALS(result, "World");
+}
+#endif // __cplusplus >= 201703L
 
 // These tests have been moved to ustr_custom_classes_test.cpp
 // but we keep the declarations to avoid compilation errors
@@ -393,6 +421,11 @@ int main() {
     UTEST_FUNC2(StringConversion, StdString);
     UTEST_FUNC2(StringConversion, StringLiteral);
     UTEST_FUNC2(StringConversion, CharArray);
+#if __cplusplus >= 201703L
+    UTEST_FUNC2(StringConversion, BasicStringView);
+    UTEST_FUNC2(StringConversion, StringViewFromString);
+    UTEST_FUNC2(StringConversion, StringViewSubstring);
+#endif
     
     // Numeric type tests
     UTEST_FUNC2(NumericTypes, Integer);

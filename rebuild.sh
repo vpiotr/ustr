@@ -28,12 +28,14 @@ BUILD_DOCS="OFF"
 CLEAN_BUILD=true # Default to clean build
 INSTALL_PREFIX=""
 VERBOSE=false
+CXX_STANDARD="" # Default: use CMakeLists.txt setting (C++11)
 
 show_help() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Options:"
     echo "  -t, --type TYPE       Build type: Debug|Release|MinSizeRel|RelWithDebInfo (default: Release)"
+    echo "  -s, --std VERSION     C++ standard: 11|14|17|20 (default: 11)"
     echo "  --no-clean            Don't clean build directory before building"
     echo "  --no-tests            Don't build tests"
     echo "  --no-demos            Don't build demos"
@@ -43,8 +45,9 @@ show_help() {
     echo "  -h, --help            Show this help message"
     echo ""
     echo "Examples:"
-    echo "  $0                                    # Clean Release build with tests and demos"
-    echo "  $0 -t Debug                          # Clean Debug build"
+    echo "  $0                                    # Clean Release build with tests and demos (C++11)"
+    echo "  $0 -t Debug -s 17                   # Clean Debug build with C++17"
+    echo "  $0 --std 20                         # Clean Release build with C++20"
     echo "  $0 --no-clean --no-tests            # Incremental Release build without tests"
     echo "  $0 --prefix /usr/local               # Clean Release build with custom install prefix"
 }
@@ -54,6 +57,10 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         -t|--type)
             BUILD_TYPE="$2"
+            shift 2
+            ;;
+        -s|--std)
+            CXX_STANDARD="$2"
             shift 2
             ;;
         --no-clean)
@@ -103,6 +110,19 @@ case $BUILD_TYPE in
         ;;
 esac
 
+# Validate C++ standard
+if [ -n "$CXX_STANDARD" ]; then
+    case $CXX_STANDARD in
+        11|14|17|20)
+            ;;
+        *)
+            echo -e "${RED}Invalid C++ standard: $CXX_STANDARD${NC}"
+            echo "Valid standards: 11, 14, 17, 20"
+            exit 1
+            ;;
+    esac
+fi
+
 # Build directory
 BUILD_DIR="$PROJECT_ROOT/build"
 
@@ -129,12 +149,21 @@ if [ -n "$INSTALL_PREFIX" ]; then
     CMAKE_ARGS+=("-DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX")
 fi
 
+if [ -n "$CXX_STANDARD" ]; then
+    CMAKE_ARGS+=("-DCMAKE_CXX_STANDARD=$CXX_STANDARD")
+fi
+
 # Configure
 echo -e "${GREEN}Configuring with CMake...${NC}"
 echo -e "${BLUE}Build type: $BUILD_TYPE${NC}"
 echo -e "${BLUE}Build tests: $BUILD_TESTS${NC}"
 echo -e "${BLUE}Build demos: $BUILD_DEMOS${NC}"
 echo -e "${BLUE}Build docs: $BUILD_DOCS${NC}"
+if [ -n "$CXX_STANDARD" ]; then
+    echo -e "${BLUE}C++ standard: $CXX_STANDARD${NC}"
+else
+    echo -e "${BLUE}C++ standard: 11 (default from CMakeLists.txt)${NC}"
+fi
 
 if [ "$VERBOSE" = true ]; then
     echo -e "${BLUE}CMake command: cmake ${CMAKE_ARGS[*]} $PROJECT_ROOT${NC}"
