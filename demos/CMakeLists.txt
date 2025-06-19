@@ -1,5 +1,10 @@
 # Demos CMakeLists.txt
 
+# Add UTF-8 support for MSVC for all demo targets
+if(MSVC)
+    add_compile_options(/utf-8 /source-charset:utf-8 /execution-charset:utf-8)
+endif()
+
 # Find all demo source files, excluding removed string iterator demos
 file(GLOB DEMO_SOURCES "*.cpp")
 list(REMOVE_ITEM DEMO_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/string_iterators_scanning_demo.cpp")

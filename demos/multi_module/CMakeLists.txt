@@ -8,6 +8,11 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Add UTF-8 support for MSVC
+if(MSVC)
+    add_compile_options(/utf-8 /source-charset:utf-8 /execution-charset:utf-8)
+endif()
+
 # Include directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../include)
 

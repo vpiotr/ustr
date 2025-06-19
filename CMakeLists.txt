@@ -17,6 +17,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Compiler-specific options
 if(MSVC)
     add_compile_options(/W4)
+    # Force UTF-8 encoding for source and execution character sets
+    add_compile_options(/utf-8)
+    # Additional UTF-8 flags for older MSVC versions
+    add_compile_options(/source-charset:utf-8 /execution-charset:utf-8)
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.14)
         add_compile_options(/experimental:external /external:W0)
     endif()
@@ -50,6 +54,11 @@ target_include_directories(ustr INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 target_compile_features(ustr INTERFACE cxx_std_11)
+
+# Add UTF-8 support for MSVC to the interface library
+if(MSVC)
+    target_compile_options(ustr INTERFACE /utf-8 /source-charset:utf-8 /execution-charset:utf-8)
+endif()
 
 # Add alias for consistent naming
 add_library(ustr::ustr ALIAS ustr)

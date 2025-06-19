@@ -3,6 +3,11 @@
 # Find the utest header (it's included in our project)
 # No need to find external packages since utest is header-only and included
 
+# Add UTF-8 support for MSVC for all test targets
+if(MSVC)
+    add_compile_options(/utf-8 /source-charset:utf-8 /execution-charset:utf-8)
+endif()
+
 # Core features test executable
 add_executable(ustr_core_features_test ustr_core_features_test.cpp)
 
