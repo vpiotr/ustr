@@ -192,6 +192,49 @@ UTEST_FUNC_DEF2(QuotedStr, UTF8DisabledWithEscaping) {
     UTEST_ASSERT_STR_EQUALS(result, u8"[Price: €10]");
 }
 
+// Tests for BOM handling
+UTEST_FUNC_DEF2(QuotedStr, BOMSkipping) {
+    // Create a string with UTF-8 BOM (0xEF 0xBB 0xBF) followed by content
+    std::string with_bom = "\xEF\xBB\xBF" "Hello World";
+    std::string result = ustr::quoted_str(with_bom, '"', '"', '\\', true);
+    UTEST_ASSERT_STR_EQUALS(result, "\"Hello World\"");
+}
+
+UTEST_FUNC_DEF2(QuotedStr, BOMSkippingWithEscaping) {
+    // Create a string with UTF-8 BOM and content that needs escaping
+    std::string with_bom = "\xEF\xBB\xBF" "Say \"Hello\"";
+    std::string result = ustr::quoted_str(with_bom, '"', '"', '\\', true);
+    UTEST_ASSERT_STR_EQUALS(result, "\"Say \\\"Hello\\\"\"");
+}
+
+UTEST_FUNC_DEF2(QuotedStr, BOMSkippingASCIIMode) {
+    // Test BOM skipping in ASCII-only mode
+    std::string with_bom = "\xEF\xBB\xBF" "Hello World";
+    std::string result = ustr::quoted_str(with_bom, '"', '"', '\\', false);
+    UTEST_ASSERT_STR_EQUALS(result, "\"Hello World\"");
+}
+
+UTEST_FUNC_DEF2(QuotedStr, BOMSkippingNoEscape) {
+    // Test BOM skipping when escape is disabled
+    std::string with_bom = "\xEF\xBB\xBF" "Hello World";
+    std::string result = ustr::quoted_str(with_bom, '"', '"', '\0', true);
+    UTEST_ASSERT_STR_EQUALS(result, "\"Hello World\"");
+}
+
+UTEST_FUNC_DEF2(QuotedStr, NoBOMString) {
+    // Test that normal strings without BOM work as before
+    std::string without_bom = "Hello World";
+    std::string result = ustr::quoted_str(without_bom, '"', '"', '\\', true);
+    UTEST_ASSERT_STR_EQUALS(result, "\"Hello World\"");
+}
+
+UTEST_FUNC_DEF2(QuotedStr, PartialBOMString) {
+    // Test string that starts with partial BOM sequence (should not be skipped)
+    std::string partial_bom = "\xEF\xBB" "Hello"; // Only first 2 bytes of BOM
+    std::string result = ustr::quoted_str(partial_bom, '"', '"', '\\', true);
+    UTEST_ASSERT_STR_EQUALS(result, "\"\xEF\xBB" "Hello\"");
+}
+
 
 int main() {
     UTEST_PROLOG();
@@ -243,6 +286,14 @@ int main() {
     UTEST_FUNC2(QuotedStr, UTF8Enabled);
     // UTEST_FUNC2(QuotedStr, UTF8Disabled); // Commented out as per user request
     UTEST_FUNC2(QuotedStr, UTF8DisabledWithEscaping);
+    
+    // BOM handling tests
+    UTEST_FUNC2(QuotedStr, BOMSkipping);
+    UTEST_FUNC2(QuotedStr, BOMSkippingWithEscaping);
+    UTEST_FUNC2(QuotedStr, BOMSkippingASCIIMode);
+    UTEST_FUNC2(QuotedStr, BOMSkippingNoEscape);
+    UTEST_FUNC2(QuotedStr, NoBOMString);
+    UTEST_FUNC2(QuotedStr, PartialBOMString);
     
     UTEST_EPILOG();
 }

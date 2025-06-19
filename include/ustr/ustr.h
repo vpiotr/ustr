@@ -967,17 +967,22 @@ public:
  * occurrences of either delimiter or the escape character within the string.
  * UTF-8 handling can be enabled or disabled for performance optimization.
  * 
+ * BOM (Byte Order Mark) Detection:
+ * If the input string starts with a UTF-8 BOM (0xEF 0xBB 0xBF), it will be automatically
+ * skipped and not included in the quoted output.
+ * 
  * @param s Input string to be quoted and escaped
  * @param start_delim Starting delimiter character
  * @param end_delim Ending delimiter character
  * @param escape Escape character to use for escaping
  * @param is_utf8 Whether to enable UTF-8 multi-byte character detection (default: true)
- * @return Quoted and escaped string
+ * @return Quoted and escaped string with BOM removed if present
  * 
  * @code{.cpp}
  * auto s1 = ustr::quoted_str("hello", '[', ']', '\\');          // "[hello]" (UTF-8 enabled by default in previous versions, now defaults to false)
  * auto s2 = ustr::quoted_str("say [hi]", '[', ']', '/', false); // "[say /[hi/]]" (ASCII-only mode)
  * auto s3 = ustr::quoted_str("test", '<', '>', '\\', true);     // "<test>" (UTF-8 enabled)
+ * auto s4 = ustr::quoted_str("\xEF\xBB\xBF" "Hello", '"', '"', '\\'); // "\"Hello\"" (BOM removed)
  * @endcode
  */
 inline std::string quoted_str(const std::string& s, char start_delim, char end_delim, char escape, bool is_utf8) {
@@ -990,11 +995,21 @@ inline std::string quoted_str(const std::string& s, char start_delim, char end_d
     // Add opening delimiter
     result += start_delim;
     
+    // Skip BOM if present at the beginning
+    std::size_t start_pos = 0;
+    if (s.length() >= 3 && 
+        static_cast<unsigned char>(s[0]) == 0xEF && 
+        static_cast<unsigned char>(s[1]) == 0xBB && 
+        static_cast<unsigned char>(s[2]) == 0xBF) {
+        // UTF-8 BOM detected, skip it
+        start_pos = 3;
+    }
+    
     if (escape != '\0') {
         // Escape mode: scan for start_delim, end_delim, and escape characters
         if (is_utf8) {
             // UTF-8 aware mode: handle multi-byte characters
-            for (std::size_t i = 0; i < s.length(); ) {
+            for (std::size_t i = start_pos; i < s.length(); ) {
                 unsigned char c = static_cast<unsigned char>(s[i]);
                 
                 // Check if this is a UTF-8 multi-byte character
@@ -1022,7 +1037,8 @@ inline std::string quoted_str(const std::string& s, char start_delim, char end_d
             }
         } else {
             // ASCII-only mode: treat each byte independently (high performance)
-            for (char ch : s) {
+            for (std::size_t i = start_pos; i < s.length(); ++i) {
+                char ch = s[i];
                 if (ch == start_delim || ch == end_delim || ch == escape) {
                     result += escape;
                 }
@@ -1030,8 +1046,8 @@ inline std::string quoted_str(const std::string& s, char start_delim, char end_d
             }
         }
     } else {
-        // No escaping: just add all characters
-        result += s;
+        // No escaping: just add all characters (but skip BOM)
+        result += s.substr(start_pos);
     }
     
     // Add closing delimiter
