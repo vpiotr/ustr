@@ -180,7 +180,7 @@ UTEST_FUNC_DEF2(QuotedStr, StartEndDelimitersComplex) {
 
 // Tests for is_utf8 parameter
 UTEST_FUNC_DEF2(QuotedStr, UTF8Enabled) {
-    std::string result = ustr::quoted_str("Hello 世界! 🌍", '"', '"', '\\\\', true);
+    std::string result = ustr::quoted_str("Hello 世界! 🌍", '"', '"', '\\', true);
     UTEST_ASSERT_STR_EQUALS(result, "\"Hello 世界! 🌍\"");
 }
 

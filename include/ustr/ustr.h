@@ -445,14 +445,9 @@ inline std::string tuple_to_string_impl(const Tuple& tuple, index_sequence<Indic
     std::ostringstream ss;
     ss << "(";
     bool first = true;
-    // C++11 compatible element processing using recursive template expansion
-    auto process_elements = [&ss, &first](const std::string& element) {
-        if (!first) ss << ", ";
-        first = false;
-        ss << element;
-    };
     // Use initializer list expansion for C++11 compatibility with quotation support
-    (void)std::initializer_list<int>{(process_elements(apply_quotation_if_needed(std::get<Indices>(tuple))), 0)...};
+    (void)std::initializer_list<int>{((first ? (first = false, ss) : (ss << ", ")) << apply_quotation_if_needed(std::get<Indices>(tuple)), 0)...};
+    (void)first; // Suppress unused variable warning for empty tuples
     ss << ")";
     return ss.str();
 }
