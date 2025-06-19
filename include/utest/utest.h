@@ -235,12 +235,22 @@ namespace details {
                      "UTEST_ASSERT_EQUALS should not be used with pointers or string literals. Use UTEST_ASSERT_STR_EQUALS for string comparison or UTEST_ASSERT_PTR_EQUALS for pointer comparison.");
     }
 
+    // C++11 compatible is_null_pointer implementation
+    template<typename T>
+    struct is_null_pointer_impl : std::false_type {};
+    
+    template<>
+    struct is_null_pointer_impl<std::nullptr_t> : std::true_type {};
+    
+    template<typename T>
+    struct is_null_pointer : is_null_pointer_impl<typename std::remove_cv<T>::type> {};
+
     // Helper to validate that only pointer types are used with UTEST_ASSERT_PTR_EQUALS
     template<typename T>
     struct is_valid_pointer : std::integral_constant<bool, 
         std::is_pointer<T>::value || 
         std::is_member_pointer<T>::value ||
-        std::is_null_pointer<T>::value> {};
+        is_null_pointer<T>::value> {};
 
     // Compile-time assertion for pointer validation in UTEST_ASSERT_PTR_EQUALS
     template<typename T, typename U>
