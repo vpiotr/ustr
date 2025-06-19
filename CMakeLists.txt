@@ -18,9 +18,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(MSVC)
     add_compile_options(/W4)
     # Force UTF-8 encoding for source and execution character sets
-    add_compile_options(/utf-8)
-    # Additional UTF-8 flags for older MSVC versions
-    add_compile_options(/source-charset:utf-8 /execution-charset:utf-8)
+    # Use /utf-8 for VS 2015 Update 2+ (MSVC 19.00.24215.1+), fallback to explicit flags for older versions
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.00.24215)
+        add_compile_options(/utf-8)
+    else()
+        add_compile_options(/source-charset:utf-8 /execution-charset:utf-8)
+    endif()
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.14)
         add_compile_options(/experimental:external /external:W0)
     endif()
@@ -57,7 +60,12 @@ target_compile_features(ustr INTERFACE cxx_std_11)
 
 # Add UTF-8 support for MSVC to the interface library
 if(MSVC)
-    target_compile_options(ustr INTERFACE /utf-8 /source-charset:utf-8 /execution-charset:utf-8)
+    # Use /utf-8 for VS 2015 Update 2+ (MSVC 19.00.24215.1+), fallback to explicit flags for older versions
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.00.24215)
+        target_compile_options(ustr INTERFACE /utf-8)
+    else()
+        target_compile_options(ustr INTERFACE /source-charset:utf-8 /execution-charset:utf-8)
+    endif()
 endif()
 
 # Add alias for consistent naming
