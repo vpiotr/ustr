@@ -16,7 +16,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Compiler-specific options
 if(MSVC)
-    add_compile_options(/W4)
+    # Windows (MSVC) - Enable most warnings including conversion warnings
+    add_compile_options(/W4 /WX- /wd4996)
     # Force UTF-8 encoding for source and execution character sets
     # Use /utf-8 for VS 2015 Update 2+ (MSVC 19.00.24215.1+), fallback to explicit flags for older versions
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.00.24215)
@@ -28,7 +29,20 @@ if(MSVC)
         add_compile_options(/experimental:external /external:W0)
     endif()
 else()
-    add_compile_options(-Wall -Wextra -Wpedantic)
+    # Linux/GCC or Clang - Enable comprehensive warnings including conversion warnings
+    add_compile_options(
+        -Wall                    # Enable most warnings
+        -Wextra                  # Enable extra warnings
+        -Wconversion             # Warn about type conversions that may alter values
+        -Wsign-conversion        # Warn about sign conversions
+        -Wfloat-conversion       # Warn about float conversions
+        -Wcast-qual              # Warn about casts that remove qualifiers
+        -Wcast-align             # Warn about casts that increase alignment requirements
+        -Wshadow                 # Warn about variable shadowing
+        -Wpedantic               # Warn about non-standard C++
+        -Wunused                 # Warn about unused variables/functions
+        -Wuninitialized          # Warn about uninitialized variables
+    )
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_options(-g -O0)
     else()
