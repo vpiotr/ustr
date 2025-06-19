@@ -201,7 +201,7 @@ namespace details {
     template<typename T>
     class is_streamable {
         template<typename TT>
-        static auto test(int) -> decltype(std::declval<std::ostringstream&>() << std::declval<TT>(), std::true_type{});
+        static decltype(std::declval<std::ostringstream&>() << std::declval<TT>(), std::true_type()) test(int);
         template<typename>
         static std::false_type test(...);
     public:
