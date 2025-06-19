@@ -209,11 +209,11 @@ int main() {
     showUsageGuidelines();
     
     std::cout << "\n=== Summary ===\n";
-    std::cout << "✓ Integer conversion: Works automatically for all enums\n";
-    std::cout << "✓ Symbolic conversion: Available via custom specialization\n";
-    std::cout << "✓ Macro helpers: Simplify symbolic conversion setup\n";
-    std::cout << "✓ Container support: All approaches work in vectors, maps, pairs, tuples\n";
-    std::cout << "✓ Mixed usage: Different enums can use different approaches\n";
+    std::cout << u8"✓ Integer conversion: Works automatically for all enums\n";
+    std::cout << u8"✓ Symbolic conversion: Available via custom specialization\n";
+    std::cout << u8"✓ Macro helpers: Simplify symbolic conversion setup\n";
+    std::cout << u8"✓ Container support: All approaches work in vectors, maps, pairs, tuples\n";
+    std::cout << u8"✓ Mixed usage: Different enums can use different approaches\n";
     std::cout << "\nChoose the approach that best fits your use case!\n";
     
     return 0;

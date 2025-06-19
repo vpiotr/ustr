@@ -528,16 +528,16 @@ int main() {
         
         std::cout << "\n=== Demo Complete ===\n";
         std::cout << "This demo showcased:\n";
-        std::cout << "• Basic type conversions (numeric, boolean, character, string)\n";
-        std::cout << "• Custom class conversions with priority ordering\n";
-        std::cout << "• Pair and tuple specializations with nesting\n";
-        std::cout << "• Container support (vector, array, deque, list, set)\n";
-        std::cout << "• Map key quoting logic (strings quoted, numerics not)\n";
-        std::cout << "• Iterator-based conversions with range subsets\n";
-        std::cout << "• Complex nested data structures\n";
-        std::cout << "• Scoped custom formatters\n";
-        std::cout << "• Real-world scenario with vehicle fleet management\n";
-        std::cout << "• Enum type conversions (traditional enums and scoped enum classes)\n";
+        std::cout << u8"• Basic type conversions (numeric, boolean, character, string)\n";
+        std::cout << u8"• Custom class conversions with priority ordering\n";
+        std::cout << u8"• Pair and tuple specializations with nesting\n";
+        std::cout << u8"• Container support (vector, array, deque, list, set)\n";
+        std::cout << u8"• Map key quoting logic (strings quoted, numerics not)\n";
+        std::cout << u8"• Iterator-based conversions with range subsets\n";
+        std::cout << u8"• Complex nested data structures\n";
+        std::cout << u8"• Scoped custom formatters\n";
+        std::cout << u8"• Real-world scenario with vehicle fleet management\n";
+        std::cout << u8"• Enum type conversions (traditional enums and scoped enum classes)\n";
         std::cout << "\nAll conversions used a single universal function: ustr::to_string()\n";
         
     } catch (const std::exception& e) {

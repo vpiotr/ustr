@@ -57,7 +57,7 @@ public:
     
     // Both to_string and operator<< available
     std::string to_string() const {
-        return std::to_string(celsius_) + "°C";
+        return std::to_string(celsius_) + u8"°C";
     }
     
     friend std::ostream& operator<<(std::ostream& os, const Temperature& temp) {
@@ -260,7 +260,7 @@ void demonstrateScopedFormatting() {
     
     // Set custom formatters for different types
     ctx.set_formatter<bool>([](bool b) { 
-        return b ? "✅ YES" : "❌ NO"; 
+        return b ? u8"✅ YES" : u8"❌ NO"; 
     });
     
     ctx.set_formatter<float>([](float f) {

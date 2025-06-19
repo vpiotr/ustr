@@ -70,13 +70,13 @@ UTEST_FUNC_DEF2(QuotedStr, NoEscapeMode) {
 
 // Test UTF-8 characters
 UTEST_FUNC_DEF2(QuotedStr, UTF8Characters) {
-    std::string result = ustr::quoted_str("Hello 世界! 🌍", '"', '"', '\\');
-    UTEST_ASSERT_STR_EQUALS(result, "\"Hello 世界! 🌍\"");
+    std::string result = ustr::quoted_str(u8"Hello 世界! 🌍", '"', '"', '\\');
+    UTEST_ASSERT_STR_EQUALS(result, u8"\"Hello 世界! 🌍\"");
 }
 
 UTEST_FUNC_DEF2(QuotedStr, UTF8WithDelimiters) {
-    std::string result = ustr::quoted_str("说 \"你好\" 世界", '"', '"', '\\');
-    UTEST_ASSERT_STR_EQUALS(result, "\"说 \\\"你好\\\" 世界\"");
+    std::string result = ustr::quoted_str(u8"说 \"你好\" 世界", '"', '"', '\\');
+    UTEST_ASSERT_STR_EQUALS(result, u8"\"说 \\\"你好\\\" 世界\"");
 }
 
 // Test edge cases
@@ -180,16 +180,16 @@ UTEST_FUNC_DEF2(QuotedStr, StartEndDelimitersComplex) {
 
 // Tests for is_utf8 parameter
 UTEST_FUNC_DEF2(QuotedStr, UTF8Enabled) {
-    std::string result = ustr::quoted_str("Hello 世界! 🌍", '"', '"', '\\', true);
-    UTEST_ASSERT_STR_EQUALS(result, "\"Hello 世界! 🌍\"");
+    std::string result = ustr::quoted_str(u8"Hello 世界! 🌍", '"', '"', '\\', true);
+    UTEST_ASSERT_STR_EQUALS(result, u8"\"Hello 世界! 🌍\"");
 }
 
 UTEST_FUNC_DEF2(QuotedStr, UTF8DisabledWithEscaping) {
     // Test with UTF-8 disabled and characters that would be escaped
     // The Euro sign € is 0xE2 0x82 0xAC. If '<' (0x3C) or '>' (0x3E) or '!' (0x21) were part of it, it would be escaped.
     // Here, we use delimiters and escape char that are not part of the Euro sign bytes.
-    std::string result = ustr::quoted_str("Price: €10", '[', ']', '%', false);
-    UTEST_ASSERT_STR_EQUALS(result, "[Price: €10]");
+    std::string result = ustr::quoted_str(u8"Price: €10", '[', ']', '%', false);
+    UTEST_ASSERT_STR_EQUALS(result, u8"[Price: €10]");
 }
 
 
