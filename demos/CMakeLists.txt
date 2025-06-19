@@ -1,7 +1,9 @@
 # Demos CMakeLists.txt
 
-# Find all demo source files
+# Find all demo source files, excluding removed string iterator demos
 file(GLOB DEMO_SOURCES "*.cpp")
+list(REMOVE_ITEM DEMO_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/string_iterators_scanning_demo.cpp")
+list(REMOVE_ITEM DEMO_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/string_iterators_stl_demo.cpp")
 
 # Create executable for each demo
 foreach(DEMO_SOURCE ${DEMO_SOURCES})

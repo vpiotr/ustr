@@ -43,6 +43,7 @@ install_manifest.txt
 *.swp
 *.swo
 *~
+.trash/
 
 # macOS specific files
 .DS_Store
@@ -51,3 +52,7 @@ install_manifest.txt
 *.deb
 *.rpm
 *.dmg
+
+# Doxygen generated files
+/docs/Doxyfile
+/docs/html/

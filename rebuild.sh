@@ -17,6 +17,14 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
 
+# Regenerate docs/Doxyfile from Doxyfile.in if present
+if [ -f "$PROJECT_ROOT/docs/Doxyfile.in" ]; then
+    echo -e "${YELLOW}Regenerating docs/Doxyfile from Doxyfile.in...${NC}"
+    # Simple variable replacement for local build (CMake does more, but this is minimal)
+    sed "s|@CMAKE_SOURCE_DIR@|$PROJECT_ROOT|g; s|@CMAKE_CURRENT_BINARY_DIR@|$PROJECT_ROOT/docs|g; s|@PROJECT_VERSION@|dev|g" \
+        "$PROJECT_ROOT/docs/Doxyfile.in" > "$PROJECT_ROOT/docs/Doxyfile"
+fi
+
 echo -e "${BLUE}USTR CMake Build Script${NC}"
 echo -e "${BLUE}=======================${NC}"
 
