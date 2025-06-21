@@ -56,3 +56,8 @@ install_manifest.txt
 # Doxygen generated files
 /docs/Doxyfile
 /docs/html/
+
+# Miscellaneous
+*.log
+*.tmp
+todo.md

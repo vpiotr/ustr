@@ -17,6 +17,7 @@ A simple, lightweight, header-only C++ library for universal string conversion w
 - [Type Detection System](#type-detection-system)
 - [API Reference](#api-reference)
 - [Building and Testing](#building-and-testing)
+  - [Running Demos](#running-demos)
 - [Performance Considerations](#performance-considerations)
 - [Contributing](#contributing)
 - [License](#license)
@@ -68,31 +69,37 @@ int main() {
     std::map<std::string, int> map = {{"key", 123}};
     auto s8 = ustr::to_string(map);             // {"key": 123}
     
+    // Enum support (integer or symbolic)
+    enum Status { PENDING, APPROVED, REJECTED };
+    auto s9 = ustr::to_string(APPROVED);        // "1" (or "APPROVED" with specialization)
+    
     // Custom specializations possible
     long long x = 123456789012345LL;
-    auto s9 = ustr::to_string(x);               // Can be customized to "123456789012345LL"
+    auto s10 = ustr::to_string(x);              // Can be customized to "123456789012345LL"
     
     return 0;
 }
 ```
 
 **What makes USTR special:**
-- 🎯 **One function for everything** - `ustr::to_string()` works with any type
-- 🧠 **Intelligent detection** - Automatically finds the best conversion method
-- ⚡ **Zero overhead** - Uses optimal conversion for each type
-- 🔧 **Fully customizable** - Easy specialization and custom implementations
-- 📦 **Header-only** - Just include and use, no dependencies
+- **One function for everything** - `ustr::to_string()` works with any type
+- **Intelligent detection** - Automatically finds the best conversion method
+- **Zero overhead** - Uses optimal conversion for each type
+- **Fully customizable** - Easy specialization and custom implementations
+- **Header-only** - Just include and use, no dependencies
 
 ## Features
 
-- 🚀 **Header-only** - Just include `ustr.h` and start using
-- 🎯 **Intelligent type detection** - Automatically selects the best conversion method
-- ⚡ **Performance optimized** - Uses `std::to_string` for numeric types
-- 🔧 **Highly customizable** - Easy specialization for custom types
-- 🛡️ **Type safe** - SFINAE-based implementation prevents compilation errors
-- 📦 **Zero dependencies** - Works with standard C++ library only
-- 🎨 **Clean API** - Single function interface: `ustr::to_string(value)`
-- ✅ **Well tested** - Comprehensive test suite included
+- **Header-only** - Just include `ustr.h` and start using
+- **Intelligent type detection** - Automatically selects the best conversion method
+- **Performance optimized** - Uses `std::to_string` for numeric types
+- **Highly customizable** - Easy specialization for custom types
+- **Type safe** - SFINAE-based implementation prevents compilation errors
+- **Zero dependencies** - Works with standard C++ library only
+- **Clean API** - Single function interface: `ustr::to_string(value)`
+- **Container support** - Works with vectors, maps, pairs, tuples, arrays
+- **Enum conversion** - Multiple approaches for enum to string conversion
+- **Well tested** - Comprehensive test suite included
 
 ## Quick Start
 
@@ -129,7 +136,7 @@ USTR is a header-only library. Simply:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/ustr.git
+git clone https://github.com/vpiotr/ustr.git
 
 # Include in your project
 #include "ustr/include/ustr/ustr.h"
@@ -238,6 +245,48 @@ debugLog("user_id", 12345);
 debugLog("balance", 1234.56);
 debugLog("is_premium", true);
 debugLog("location", Point(40.7128, -74.0060));
+```
+
+### Enum Conversions
+
+USTR supports multiple approaches for enum to string conversion:
+
+```cpp
+// Approach 1: Default integer conversion (automatic)
+enum Color { RED, GREEN, BLUE };
+auto s1 = ustr::to_string(GREEN);           // "1" (shows underlying value)
+
+// Approach 2: Symbolic conversion with custom specialization
+enum class LogLevel { DEBUG, INFO, WARNING, ERROR };
+
+// Enable custom specialization
+namespace ustr {
+    template<> struct has_custom_specialization<LogLevel> : std::true_type {};
+    namespace details {
+        template<>
+        inline std::string to_string_impl<LogLevel>(const LogLevel& value) {
+            switch(value) {
+                case LogLevel::DEBUG: return "DEBUG";
+                case LogLevel::INFO: return "INFO"; 
+                case LogLevel::WARNING: return "WARNING";
+                case LogLevel::ERROR: return "ERROR";
+                default: return "UNKNOWN";
+            }
+        }
+    }
+}
+
+auto s2 = ustr::to_string(LogLevel::WARNING); // "WARNING" (symbolic name)
+
+// Enums work in containers too
+std::vector<Color> colors = {RED, GREEN, BLUE};
+auto s3 = ustr::to_string(colors);           // "[0, 1, 2]" or symbolic if specialized
+
+std::map<LogLevel, std::string> messages = {
+    {LogLevel::INFO, "All good"}, 
+    {LogLevel::ERROR, "Failed"}
+};
+auto s4 = ustr::to_string(messages);         // {INFO: "All good", ERROR: "Failed"}
 ```
 
 ## Type Detection System
@@ -389,7 +438,7 @@ Boolean constant indicating if type `T` has a custom `to_string_impl` specializa
 
 ```bash
 # Quick build (Release mode with tests and demos)
-./cmake_build.sh
+./rebuild.sh
 
 # Or step by step
 mkdir build
@@ -398,22 +447,22 @@ cmake ..
 make
 
 # Build options
-./cmake_build.sh --help                    # Show all options
-./cmake_build.sh -t Debug                  # Debug build
-./cmake_build.sh --no-tests                # Skip tests
-./cmake_build.sh --no-demos                # Skip demos
-./cmake_build.sh --with-docs               # Build documentation (requires Doxygen)
-./cmake_build.sh --prefix /usr/local       # Set install prefix
+./rebuild.sh --help                    # Show all options
+./rebuild.sh -t Debug                  # Debug build
+./rebuild.sh --no-tests                # Skip tests
+./rebuild.sh --no-demos                # Skip demos
+./rebuild.sh --with-docs               # Build documentation (requires Doxygen)
+./rebuild.sh --prefix /usr/local       # Set install prefix
 ```
 
 ### Building with Shell Scripts (Alternative)
 
 ```bash
 # Make scripts executable
-chmod +x build.sh run_tests.sh run_demos.sh
+chmod +x rebuild.sh run_tests.sh run_demos.sh
 
 # Build everything (tests and demos)
-./build.sh
+./rebuild.sh
 
 # Or build manually
 g++ -std=c++11 -Wall -Iinclude -o build/ustr_core_features_test tests/ustr_core_features_test.cpp
@@ -435,12 +484,86 @@ cd build && ctest
 # Or run directly
 ./build/bin/ustr_core_features_test  # Core features tests (CMake build)
 ./build/bin/ustr_container_test      # Container tests (CMake build)
-./build/ustr_core_features_test      # Shell script build
-./build/ustr_container_test          # Shell script build
 ```
 
 ### Running Demos
 
+USTR includes several comprehensive demos that showcase different aspects of the library:
+
+#### Basic Demo (`ustr_demo`)
+```bash
+./build/bin/ustr_demo
+```
+Demonstrates fundamental USTR functionality including:
+- Basic type conversions (numeric, boolean, character, string)
+- Custom classes with `to_string()` methods vs streamable classes
+- Type detection and conversion priority
+- Container support (vectors, maps, pairs, tuples)
+- Non-streamable types and fallback behavior
+
+#### Comprehensive Demo (`comprehensive_demo`)
+```bash
+./build/bin/comprehensive_demo
+```
+The most complete demonstration featuring:
+- **All basic types**: integers, floats, booleans, characters, strings
+- **Custom class hierarchies**: Vehicle, Engine, GPS, Car classes showing different conversion approaches
+- **Complex containers**: Nested vectors, maps with mixed types, arrays, deques, lists, sets
+- **Real-world scenarios**: Vehicle fleet management system with service records
+- **Advanced features**: Custom formatting contexts, iterator-based conversions
+- **Scoped formatting**: Temporary custom formatters for specific use cases
+
+#### Enum Conversion Demo (`enum_conversion_demo`)
+```bash
+./build/bin/enum_conversion_demo
+```
+**Comprehensive guide to enum string conversion with three approaches:**
+
+**1. Default Integer Conversion (Automatic)**
+- Works immediately with any enum, no setup required
+- Shows underlying integer values
+- Perfect for performance-critical code or internal IDs
+```cpp
+enum BasicColor { RED, GREEN, BLUE };
+// ustr::to_string(GREEN) returns "1"
+```
+
+**2. Manual Custom Specialization (Full Control)**
+- Complete control over conversion logic
+- More verbose but maximum flexibility
+- Ideal for complex formatting requirements
+```cpp
+enum class LogLevel : int { DEBUG = 1, INFO = 2, WARNING = 3, ERROR = 4 };
+// Custom specialization returns "WARNING" instead of "3"
+```
+
+**3. Macro-Assisted Symbolic Conversion (Recommended)**
+- Easy to implement with minimal boilerplate
+- Human-readable symbolic names
+- Best balance of simplicity and readability
+```cpp
+enum Direction { NORTH, SOUTH, EAST, WEST };
+// Macro setup returns "NORTH" instead of "0"
+```
+
+The demo shows:
+- All three approaches with practical examples
+- Usage in containers (vectors, maps, pairs, tuples)
+- Mixed usage scenarios (combining different approaches)
+- Performance and readability trade-offs
+- Usage guidelines and recommendations
+
+#### Multi-Module Demo (`multi_module_demo`)
+```bash
+./build/bin/multi_module_demo
+```
+Demonstrates USTR usage across separate compilation units:
+- **Module separation**: Shows how USTR works across different modules
+- **Header-only verification**: Confirms no linking issues
+- **Cross-module compatibility**: Custom types defined in one module work in another
+- **Build system integration**: Example of multi-module CMake setup
+
+#### Running All Demos
 ```bash
 # Using CMake (from build directory)
 cd build && make run_demos
@@ -448,9 +571,11 @@ cd build && make run_demos
 # Using shell scripts
 ./run_demos.sh
 
-# Or run directly
-./build/bin/ustr_demo    # CMake build
-./build/ustr_demo        # Shell script build
+# Or run individual demos directly
+./build/bin/ustr_demo              # Basic functionality
+./build/bin/comprehensive_demo     # Complete feature showcase  
+./build/bin/enum_conversion_demo   # Enum conversion approaches
+./build/bin/multi_module_demo      # Multi-module usage
 ```
 
 ### Installing
@@ -461,7 +586,7 @@ cd build
 make install
 
 # Or install to custom location
-./cmake_build.sh --prefix /path/to/install
+./rebuild.sh --prefix /path/to/install
 cd build
 make install
 ```
@@ -493,11 +618,24 @@ ustr/
 │       └── utest.h             # Testing framework (included)
 ├── tests/
 │   ├── CMakeLists.txt          # CMake configuration for tests
-│   ├── ustr_core_features_test.cpp  # Core features test suite
-│   └── ustr_container_test.cpp      # Container-specific test suite
+│   ├── ustr_core_features_test.cpp    # Core features test suite
+│   ├── ustr_container_test.cpp        # Container-specific test suite
+│   ├── ustr_custom_classes_test.cpp   # Custom classes test suite
+│   ├── ustr_enum_test.cpp             # Enum conversion test suite
+│   ├── ustr_format_context_test.cpp   # Format context test suite
+│   ├── ustr_pair_test.cpp             # Pair conversion test suite
+│   ├── ustr_tuple_test.cpp            # Tuple conversion test suite
+│   ├── ustr_custom_specialization_test.cpp  # Custom specialization tests
+│   └── ustr_quoted_str_test.cpp       # Quoted string test suite
 ├── demos/
 │   ├── CMakeLists.txt          # CMake configuration for demos
-│   └── ustr_demo.cpp           # Usage examples and demonstrations
+│   ├── ustr_demo.cpp           # Basic usage examples and demonstrations
+│   ├── comprehensive_demo.cpp  # Complete feature showcase with real-world scenarios
+│   ├── enum_conversion_demo.cpp # Enum conversion approaches (integer, symbolic, custom)
+│   └── multi_module/           # Multi-module demo project
+│       ├── main.cpp            # Main demo coordinator
+│       ├── module1/            # First module with basic types
+│       └── module2/            # Second module with custom classes
 ├── docs/
 │   ├── CMakeLists.txt          # CMake configuration for documentation
 │   └── Doxyfile.in             # Doxygen configuration template
@@ -505,8 +643,8 @@ ustr/
 │   └── ustr-config.cmake.in    # CMake package configuration template
 ├── build/                      # Build output directory (created by build)
 ├── CMakeLists.txt              # Main CMake configuration
-├── cmake_build.sh              # CMake build script (recommended)
-├── build.sh                    # Legacy shell build script
+├── rebuild.sh                  # CMake build script (recommended)
+├── build_docs.sh               # Documentation build script
 ├── run_tests.sh               # Test runner script
 ├── run_demos.sh               # Demo runner script
 └── README.md                  # This file
@@ -538,13 +676,20 @@ Contributions are welcome! Please follow these guidelines:
 2. **Testing**: Add tests for new features in appropriate test file:
    - Core functionality: `tests/ustr_core_features_test.cpp`
    - Container functionality: `tests/ustr_container_test.cpp`
+   - Custom classes: `tests/ustr_custom_classes_test.cpp`
+   - Enum support: `tests/ustr_enum_test.cpp`
+   - Format context: `tests/ustr_format_context_test.cpp`
+   - Pair support: `tests/ustr_pair_test.cpp`
+   - Tuple support: `tests/ustr_tuple_test.cpp`
+   - Custom specializations: `tests/ustr_custom_specialization_test.cpp`
+   - Quoted strings: `tests/ustr_quoted_str_test.cpp`
 3. **Documentation**: Update README and inline documentation
 4. **Compatibility**: Maintain C++11 compatibility
 
 ### Running Tests Before Contributing
 
 ```bash
-./build.sh && ./run_tests.sh
+./rebuild.sh && ./run_tests.sh
 ```
 
 ### Adding New Features
@@ -553,7 +698,18 @@ Contributions are welcome! Please follow these guidelines:
 2. Add tests to appropriate test file:
    - Core functionality: `tests/ustr_core_features_test.cpp`
    - Container functionality: `tests/ustr_container_test.cpp`
-3. Add examples to `demos/ustr_demo.cpp` if applicable
+   - Custom classes: `tests/ustr_custom_classes_test.cpp`
+   - Enum support: `tests/ustr_enum_test.cpp`
+   - Format context: `tests/ustr_format_context_test.cpp`
+   - Pair support: `tests/ustr_pair_test.cpp`
+   - Tuple support: `tests/ustr_tuple_test.cpp`
+   - Custom specializations: `tests/ustr_custom_specialization_test.cpp`
+   - Quoted strings: `tests/ustr_quoted_str_test.cpp`
+3. **Examples**: Add examples to appropriate demo files if applicable:
+   - Basic examples: `demos/ustr_demo.cpp`
+   - Complex scenarios: `demos/comprehensive_demo.cpp` 
+   - Enum features: `demos/enum_conversion_demo.cpp`
+   - Multi-module usage: `demos/multi_module/`
 4. Update README.md
 
 ## License

@@ -24,10 +24,10 @@ echo -e "${BLUE}================${NC}"
 # Check if build directory exists
 if [ ! -d "$BUILD_DIR" ]; then
     echo -e "${YELLOW}Build directory not found. Running build script...${NC}"
-    if [ -x "$PROJECT_ROOT/build.sh" ]; then
-        "$PROJECT_ROOT/build.sh"
+    if [ -x "$PROJECT_ROOT/rebuild.sh" ]; then
+        "$PROJECT_ROOT/rebuild.sh"
     else
-        echo -e "${RED}Build script not found or not executable: $PROJECT_ROOT/build.sh${NC}"
+        echo -e "${RED}Build script not found or not executable: $PROJECT_ROOT/rebuild.sh${NC}"
         exit 1
     fi
 fi
@@ -62,12 +62,12 @@ echo "============="
 
 if [ $demo_count -eq 0 ]; then
     echo -e "${YELLOW}No demo binaries found in $BUILD_DIR${NC}"
-    echo -e "${YELLOW}Try running the build script first: ./build.sh${NC}"
+    echo -e "${YELLOW}Try running the build script first: ./rebuild.sh${NC}"
     exit 1
 elif [ $failed_demos -eq 0 ]; then
-    echo -e "${GREEN}✓ All $demo_count demos completed successfully!${NC}"
+    echo -e "${GREEN}All $demo_count demos completed successfully!${NC}"
     exit 0
 else
-    echo -e "${RED}✗ $failed_demos out of $demo_count demos failed${NC}"
+    echo -e "${RED}$failed_demos out of $demo_count demos failed${NC}"
     exit 1
 fi
